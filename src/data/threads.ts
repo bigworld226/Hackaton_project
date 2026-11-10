@@ -49,3 +49,25 @@ export const threads: Thread[] = [
     createdAt: 'il y a 3 h',
   },
 ]
+
+let communityThreads = [...threads]
+
+export function getThreads() {
+  return [...communityThreads]
+}
+
+export function getThreadById(id: string) {
+  return communityThreads.find((thread) => thread.id === id)
+}
+
+export function addThread(input: Pick<Thread, 'title' | 'body' | 'author' | 'city' | 'country' | 'tags'>) {
+  const thread: Thread = {
+    ...input,
+    id: `thread-${Date.now().toString(36)}`,
+    replies: 0,
+    views: 1,
+    createdAt: 'à l’instant',
+  }
+  communityThreads = [thread, ...communityThreads]
+  return thread
+}

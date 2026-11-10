@@ -678,7 +678,7 @@
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
-    padding: 0;
+    padding: 0 0 76px;
   }
 
   .ui-layout--reels > .ui-page-content {

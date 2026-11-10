@@ -12,7 +12,7 @@ import {
   UsersRound,
   X,
 } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Button, EmptyState, Input, ProgressBar } from '@/components'
 import communityPortrait from '@/assets/community-portrait.jpg'
@@ -160,9 +160,15 @@ export function ReelsPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [liked, setLiked] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [showLikeFeedback, setShowLikeFeedback] = useState(false)
   const [message, setMessage] = useState('')
   const [commentsOpen, setCommentsOpen] = useState(false)
   const [comments, setComments] = useState<Comment[]>(sampleReplies)
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => {
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+  }, [])
 
   function addComment(text: string) {
     setComments((current) => [...current, { author: 'Toi', city: 'Ta communauté', text }])
@@ -178,22 +184,65 @@ export function ReelsPage() {
     }
   }
 
+  function handleMediaClick(event: MouseEvent<HTMLElement>) {
+    if (event.detail > 1) return
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+    clickTimer.current = setTimeout(() => {
+      setIsPlaying((current) => !current)
+      clickTimer.current = null
+    }, 240)
+  }
+
+  function handleMediaDoubleClick() {
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+    clickTimer.current = null
+    setLiked(true)
+    setShowLikeFeedback(true)
+    window.setTimeout(() => setShowLikeFeedback(false), 850)
+  }
+
+  function togglePlayback() {
+    if (clickTimer.current) clearTimeout(clickTimer.current)
+    clickTimer.current = null
+    setIsPlaying((current) => !current)
+  }
+
   return (
     <ResponsiveLayout title="Reels">
       <div className="social-reel-page">
         <div className="social-reel-stage">
           <article aria-label="Reel de Maya Santos" className="social-reel-card">
-            <img
-              alt="Une rue de Lisbonne traversée par un tramway"
-              className="social-reel-image"
-              src={communityStory}
-            />
-            <div className="social-reel-shade" />
+            <div
+              aria-label="Vidéo — cliquer pour lire ou mettre en pause, double-cliquer pour aimer"
+              className="social-reel-media"
+              onClick={handleMediaClick}
+              onDoubleClick={handleMediaDoubleClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  togglePlayback()
+                }
+              }}
+            >
+              <img
+                alt="Une rue de Lisbonne traversée par un tramway"
+                className="social-reel-image"
+                draggable={false}
+                src={communityStory}
+              />
+              <div className="social-reel-shade" />
+            </div>
+            {showLikeFeedback && (
+              <Heart aria-hidden="true" className="social-reel-like-feedback" fill="currentColor" size={88} />
+            )}
             <button
               aria-label={isPlaying ? 'Mettre le Reel en pause' : 'Lire le Reel'}
               aria-pressed={isPlaying}
               className="social-reel-play"
-              onClick={() => setIsPlaying((current) => !current)}
+              onClick={handleMediaClick}
+              onDoubleClick={handleMediaDoubleClick}
               type="button"
             >
               {isPlaying ? <Pause aria-hidden="true" size={28} /> : <Play aria-hidden="true" size={28} />}

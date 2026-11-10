@@ -10,6 +10,13 @@ import {
   TweetRepliesPage,
   TweetsPage,
 } from './social/SocialPages'
+import {
+  CountriesPage,
+  ForumScopePage,
+  ForumsPage,
+  NewThreadPage,
+  ThreadDetailPage,
+} from './community/CommunityPages'
 
 interface ScreenPageProps {
   screen: AppScreen
@@ -23,6 +30,12 @@ export function ScreenPage({ screen }: ScreenPageProps) {
   if (screen.path === '/home/tweets') return <TweetsPage />
   if (screen.path === '/tweets/:id') return <TweetRepliesPage />
   if (screen.path === '/create') return <CreatePage />
+  if (screen.path === '/forums') return <ForumsPage />
+  if (screen.path === '/forums/city') return <ForumScopePage scope="city" />
+  if (screen.path === '/forums/country') return <ForumScopePage scope="country" />
+  if (screen.path === '/countries') return <CountriesPage />
+  if (screen.path === '/threads/:id') return <ThreadDetailPage />
+  if (screen.path === '/threads/new') return <NewThreadPage />
 
   return <ResponsiveLayout title={screen.title}>{null}</ResponsiveLayout>
 }

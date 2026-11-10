@@ -16,6 +16,7 @@ export function MobileLayout({ children, title = 'Votre communauté' }: MobileLa
       <div className="ui-layout ui-layout--mobile ui-layout--reels">
         <FeedSwitcher />
         <main className="ui-page-content">{children}</main>
+        <BottomNav />
       </div>
     )
   }

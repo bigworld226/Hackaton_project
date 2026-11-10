@@ -30,6 +30,19 @@
   isolation: isolate;
 }
 
+.social-reel-media {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.social-reel-media:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -5px;
+}
+
 .social-reel-image,
 .social-reel-shade {
   position: absolute;
@@ -62,6 +75,7 @@
   background: rgb(16 39 29 / 92%);
   cursor: pointer;
   transform: translate(-50%, -50%);
+  z-index: 1;
 }
 
 .social-reel-play:hover {
@@ -70,6 +84,7 @@
 
 .social-reel-actions {
   position: absolute;
+  z-index: 2;
   right: 12px;
   bottom: 21%;
   display: grid;
@@ -98,11 +113,24 @@
 
 .social-reel-copy {
   position: absolute;
+  z-index: 2;
   right: 72px;
   bottom: 16px;
   left: 20px;
   display: grid;
   gap: 12px;
+}
+
+.social-reel-like-feedback {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  color: #fff;
+  filter: drop-shadow(0 3px 12px rgb(0 0 0 / 40%));
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: social-reel-heart-pop 850ms ease-out both;
 }
 
 .social-reel-author,
@@ -540,6 +568,13 @@
   to { transform: translateY(0); }
 }
 
+@keyframes social-reel-heart-pop {
+  0% { opacity: 0; scale: 0.35; }
+  22% { opacity: 1; scale: 1.15; }
+  38% { scale: 1; }
+  100% { opacity: 0; scale: 1.1; }
+}
+
 @media (min-width: 768px) {
   .social-feed-layout {
     grid-template-columns: minmax(0, 640px) minmax(250px, 364px);
@@ -646,7 +681,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .social-comments-overlay,
-  .social-comments-sheet {
+  .social-comments-sheet,
+  .social-reel-like-feedback {
     animation: none;
   }
 }
