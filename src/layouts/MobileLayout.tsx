@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { BottomNav, TopBar } from '@/components'
+import { BottomNav, FeedSwitcher, TopBar } from '@/components'
 
 interface MobileLayoutProps {
   children: ReactNode
@@ -10,6 +10,7 @@ export function MobileLayout({ children, title = 'Votre communauté' }: MobileLa
   return (
     <div className="ui-layout ui-layout--mobile">
       <TopBar title={title} />
+      <FeedSwitcher />
       <main className="ui-page-content">{children}</main>
       <BottomNav />
     </div>

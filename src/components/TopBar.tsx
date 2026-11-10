@@ -1,5 +1,6 @@
 import { ArrowLeft } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 
 interface TopBarProps {
   action?: ReactNode
@@ -11,13 +12,13 @@ export function TopBar({ action, backHref, title }: TopBarProps) {
   return (
     <header className="ui-top-bar">
       {backHref ? (
-        <a aria-label="Retour" className="ui-back-link" href={backHref}>
+        <Link aria-label="Retour" className="ui-back-link" to={backHref}>
           <ArrowLeft aria-hidden="true" size={21} />
-        </a>
+        </Link>
       ) : (
-        <a aria-label="Accueil" className="ui-brand" href="/">
+        <Link aria-label="Accueil" className="ui-brand" to="/welcome">
           common
-        </a>
+        </Link>
       )}
       <h1 className="ui-top-bar-title">{title}</h1>
       <div className="ui-top-bar-action">{action}</div>
