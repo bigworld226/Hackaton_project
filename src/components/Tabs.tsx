@@ -1,4 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface TabItem {
   label: string
@@ -20,6 +21,7 @@ export function Tabs({
   onValueChange,
   value,
 }: TabsProps) {
+  const { t } = useTranslation()
   const generatedId = useId()
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const [uncontrolledValue, setUncontrolledValue] = useState(
@@ -60,7 +62,7 @@ export function Tabs({
 
   return (
     <div className="ui-tabs">
-      <div aria-label="Sections" className="ui-tab-list" role="tablist">
+      <div aria-label={t('common.sections')} className="ui-tab-list" role="tablist">
         {items.map((item, index) => {
           const selected = item.value === activeTab?.value
           const tabId = `${generatedId}-tab-${index}`

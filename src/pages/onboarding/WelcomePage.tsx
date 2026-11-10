@@ -1,20 +1,22 @@
 import { ArrowRight, Code2, MapPin, Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import neighborhoodImage from '@/assets/welcome-neighborhood.jpg'
 
 export function WelcomePage() {
+  const { t } = useTranslation()
   return (
     <main className="onboarding-screen">
       <aside className="onboarding-sidebar">
-        <Link aria-label="Common, accueil" className="onboarding-brand" to="/welcome">
+        <Link aria-label={t('onboarding.home')} className="onboarding-brand" to="/welcome">
           common<span>.</span>
         </Link>
         <div className="onboarding-sidebar-copy">
-          <p>Ton monde.</p>
-          <p>Ton code.</p>
-          <p>Ta communauté.</p>
+          <p>{t('onboarding.welcomeLine1')}</p>
+          <p>{t('onboarding.welcomeLine2')}</p>
+          <p>{t('onboarding.welcomeLine3')}</p>
         </div>
-        <p className="onboarding-sidebar-foot">FAIT POUR LES GENS QUI CODENT</p>
+        <p className="onboarding-sidebar-foot">{t('onboarding.madeFor')}</p>
       </aside>
 
       <div className="onboarding-workspace">
@@ -22,21 +24,21 @@ export function WelcomePage() {
           <div className="onboarding-wordmark">
             common<span>.</span>
           </div>
-          <p>BIENVENUE DANS COMMON</p>
-          <h1>Le code est meilleur à plusieurs.</h1>
+          <p>{t('onboarding.welcomeEyebrow')}</p>
+          <h1>{t('onboarding.welcomeTitle')}</h1>
         </header>
 
         <div className="onboarding-columns">
           <section aria-labelledby="welcome-title" className="onboarding-content">
             <div className="onboarding-hero">
               <div className="onboarding-hero-copy">
-                <span className="onboarding-step-label">01 / TA COMMUNAUTÉ DEV</span>
-                <h2 id="welcome-title">Des idées locales. Du code sans frontières.</h2>
-                <p>Rencontre des devs, partage ce que tu apprends et progresse ensemble.</p>
+                <span className="onboarding-step-label">{t('onboarding.step')}</span>
+                <h2 id="welcome-title">{t('onboarding.welcomeHeading')}</h2>
+                <p>{t('onboarding.welcomeDescription')}</p>
                 <Code2 aria-hidden="true" className="onboarding-hero-mark" size={28} />
               </div>
               <img
-                alt="Un tramway traverse une rue de Lisbonne"
+                alt={t('onboarding.tramAlt')}
                 className="onboarding-hero-image"
                 src={neighborhoodImage}
               />
@@ -44,41 +46,40 @@ export function WelcomePage() {
 
             <div className="onboarding-welcome-copy">
               <p>
-                Regarde des vidéos de code, publie tes découvertes et retrouve les
-                développeurs près de chez toi.
+                {t('onboarding.communityText')}
               </p>
               <div className="onboarding-benefits">
-                <span><Sparkles aria-hidden="true" size={17} /> Des formats courts et utiles</span>
-                <span><MapPin aria-hidden="true" size={17} /> Une communauté, aussi près de toi</span>
+                <span><Sparkles aria-hidden="true" size={17} /> {t('onboarding.shortFormats')}</span>
+                <span><MapPin aria-hidden="true" size={17} /> {t('onboarding.localCommunity')}</span>
               </div>
             </div>
 
             <div className="onboarding-actions">
               <Link className="ui-button ui-button--primary onboarding-button" to="/place">
-                Rejoindre la communauté <ArrowRight aria-hidden="true" size={18} />
+                {t('onboarding.join')} <ArrowRight aria-hidden="true" size={18} />
               </Link>
               <Link className="ui-button ui-button--secondary onboarding-button" to="/home/reels">
-                Explorer d’abord
+                {t('onboarding.exploreFirst')}
               </Link>
             </div>
-            <p className="onboarding-progress">1 SUR 3 · COMMENCE PRÈS DE CHEZ TOI</p>
+            <p className="onboarding-progress">{t('onboarding.welcomeProgress')}</p>
           </section>
 
-          <aside aria-label="L’esprit Common" className="onboarding-aside">
+          <aside aria-label={t('onboarding.spirit')} className="onboarding-aside">
             <article className="onboarding-photo-card">
               <img
-                alt="Une rue vivante où les gens se croisent"
+                alt={t('onboarding.tramAlt')}
                 className="onboarding-photo-card-image"
                 src={neighborhoodImage}
               />
               <div>
-                <h2>Les idées voyagent. Les rencontres commencent ici.</h2>
-                <p>Du premier commit au prochain meetup, avance avec les autres.</p>
+                <h2>{t('onboarding.travelIdeas')}</h2>
+                <p>{t('onboarding.meetupText')}</p>
               </div>
             </article>
             <article className="onboarding-promise-card">
-              <h2>Un coin d’internet pour les devs.</h2>
-              <p>Curieux par défaut. Bienveillant toujours. Techniquement passionné.</p>
+              <h2>{t('onboarding.internetCorner')}</h2>
+              <p>{t('onboarding.promise')}</p>
             </article>
           </aside>
         </div>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ResponsiveLayout } from '@/layouts'
 import { appScreens, type AppScreen } from './screens'
 import { PlacePage } from './onboarding/PlacePage'
@@ -26,6 +27,16 @@ import {
   QuizPreviewPage,
   QuizResultsPage,
 } from './quiz/QuizPages'
+import {
+  ChangeCityPage,
+  ConversationPage,
+  LeaderboardPage,
+  MessagesPage,
+  NotificationsPage,
+  PrivacyPage,
+  ProfilePage,
+  SettingsPage,
+} from './account/AccountPages'
 
 interface ScreenPageProps {
   screen: AppScreen
@@ -52,18 +63,27 @@ export function ScreenPage({ screen }: ScreenPageProps) {
   if (screen.path === '/quiz/preview') return <QuizPreviewPage />
   if (screen.path === '/quiz/play') return <QuizPlayPage />
   if (screen.path === '/quiz/results') return <QuizResultsPage />
+  if (screen.path === '/profile') return <ProfilePage />
+  if (screen.path === '/leaderboard') return <LeaderboardPage />
+  if (screen.path === '/notifications') return <NotificationsPage />
+  if (screen.path === '/messages') return <MessagesPage />
+  if (screen.path === '/messages/:id') return <ConversationPage />
+  if (screen.path === '/settings') return <SettingsPage />
+  if (screen.path === '/settings/privacy') return <PrivacyPage />
+  if (screen.path === '/settings/city') return <ChangeCityPage />
 
   return <ResponsiveLayout title={screen.title}>{null}</ResponsiveLayout>
 }
 
 export function NotFoundPage() {
   const welcome = appScreens[0]
+  const { t } = useTranslation()
 
   return (
-    <ResponsiveLayout title="Page introuvable">
+    <ResponsiveLayout title={t('common.notFound')}>
       {welcome && (
         <p>
-          <Link to={welcome.path}>Retour à l’accueil</Link>
+          <Link to={welcome.path}>{t('common.backToHome')}</Link>
         </p>
       )}
     </ResponsiveLayout>

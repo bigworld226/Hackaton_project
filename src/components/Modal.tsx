@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from './Button'
 
 interface ModalProps {
@@ -10,6 +11,7 @@ interface ModalProps {
 }
 
 export function Modal({ children, onClose, open, title }: ModalProps) {
+  const { t } = useTranslation()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
 
@@ -44,7 +46,7 @@ export function Modal({ children, onClose, open, title }: ModalProps) {
           {title}
         </h2>
         <button
-          aria-label="Fermer"
+          aria-label={t('common.close')}
           className="ui-icon-button"
           onClick={() => dialogRef.current?.close()}
           type="button"
@@ -55,9 +57,9 @@ export function Modal({ children, onClose, open, title }: ModalProps) {
       <div className="ui-modal-content">{children}</div>
       <div className="ui-modal-actions">
         <Button onClick={onClose} variant="secondary">
-          Annuler
+          {t('common.cancel')}
         </Button>
-        <Button onClick={onClose}>Continuer</Button>
+        <Button onClick={onClose}>{t('common.continue')}</Button>
       </div>
     </dialog>
   )

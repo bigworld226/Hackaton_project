@@ -5,6 +5,7 @@
 @import "./pages/social/social.css";
 @import "./pages/community/community.css";
 @import "./pages/quiz/quiz.css";
+@import "./pages/account/account.css";
 
 :root {
   font-family: var(--font-sans);

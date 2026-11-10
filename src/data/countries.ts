@@ -38,6 +38,12 @@ const westAfricanCountryCodes = [
 const westAfricanCountryCodeSet = new Set(westAfricanCountryCodes)
 const countryNames = new Intl.DisplayNames(['fr'], { type: 'region' })
 
+export function getCountryName(code: string, locale = 'fr') {
+  return new Intl.DisplayNames([locale], { type: 'region' }).of(code)
+    ?? countries.find((country) => country.code === code)?.name
+    ?? code
+}
+
 export const countries: Country[] = countryCodes
   .map((code) => ({ code, name: countryNames.of(code) ?? code }))
   .sort((a, b) => a.name.localeCompare(b.name, 'fr'))

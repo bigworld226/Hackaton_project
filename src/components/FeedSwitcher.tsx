@@ -1,19 +1,21 @@
 import { CircleHelp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 
 export function FeedSwitcher() {
   const { pathname } = useLocation()
+  const { t } = useTranslation()
   if (pathname !== '/home/reels' && pathname !== '/home/tweets') return null
 
   return (
-    <nav aria-label="Fil d’actualité" className="ui-feed-switcher">
+    <nav aria-label={t('nav.feed')} className="ui-feed-switcher">
       <NavLink
         className={({ isActive }) =>
           `ui-feed-tab${isActive ? ' ui-feed-tab--active' : ''}`
         }
         to="/home/reels"
       >
-        Reels
+        {t('nav.reels')}
       </NavLink>
       <NavLink
         className={({ isActive }) =>
@@ -21,15 +23,15 @@ export function FeedSwitcher() {
         }
         to="/home/tweets"
       >
-        Publications
+        {t('nav.posts')}
       </NavLink>
       <Link
-        aria-label="Ouvrir les quiz"
+        aria-label={t('nav.quiz')}
         className="ui-feed-quiz-action"
         to="/quiz"
       >
         <CircleHelp aria-hidden="true" size={23} strokeWidth={1.8} />
-        <span>Quiz</span>
+        <span>{t('nav.quiz')}</span>
       </Link>
     </nav>
   )

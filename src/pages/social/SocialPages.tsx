@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import { Button, EmptyState, Input, ProgressBar } from '@/components'
 import communityPortrait from '@/assets/community-portrait.jpg'
@@ -55,6 +56,7 @@ function CommentsSheet({
   open: boolean
 }) {
   const [reply, setReply] = useState('')
+  const { t } = useTranslation()
   const inputId = useId()
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
@@ -85,7 +87,7 @@ function CommentsSheet({
 
   return (
     <div
-      aria-label="Commentaires"
+      aria-label={t('social.comments')}
       aria-modal="true"
       className="social-comments-overlay"
       onClick={(event) => {
@@ -114,10 +116,10 @@ function CommentsSheet({
       <section aria-labelledby="social-comments-title" className="social-comments-sheet">
         <header className="social-comments-header">
           <div>
-            <h2 id="social-comments-title">Commentaires</h2>
-            <span>{count} réponses</span>
+            <h2 id="social-comments-title">{t('social.comments')}</h2>
+            <span>{t('social.replies', { count })}</span>
           </div>
-          <button aria-label="Fermer les commentaires" className="social-comments-close" onClick={onClose} type="button">
+          <button aria-label={t('social.closeComments')} className="social-comments-close" onClick={onClose} type="button">
             <X aria-hidden="true" size={21} />
           </button>
         </header>
@@ -127,10 +129,10 @@ function CommentsSheet({
               <img alt="" src={communityPortrait} />
               <div>
                 <strong>{comment.author}</strong>
-                <span>{comment.city} · à l’instant</span>
+                <span>{comment.city} · {t('social.justNow')}</span>
                 <p>{comment.text}</p>
-                <button aria-label={`Aimer le commentaire de ${comment.author}`} type="button">
-                  <Heart aria-hidden="true" size={15} /> J’aime
+                <button aria-label={t('social.likeComment', { author: comment.author })} type="button">
+                  <Heart aria-hidden="true" size={15} /> {t('social.like')}
                 </button>
               </div>
             </article>
@@ -139,15 +141,15 @@ function CommentsSheet({
         <form className="social-comments-form" onSubmit={submitComment}>
           <img alt="" src={communityPortrait} />
           <Input
-            aria-label="Écrire un commentaire"
+            aria-label={t('social.writeComment')}
             autoComplete="off"
             id={inputId}
-            label="Écrire un commentaire"
+            label={t('social.writeComment')}
             onChange={(event) => setReply(event.currentTarget.value)}
-            placeholder="Ajoute un commentaire…"
+            placeholder={t('social.commentPlaceholder')}
             value={reply}
           />
-          <Button aria-label="Publier le commentaire" disabled={!reply.trim()} type="submit">
+          <Button aria-label={t('social.publishComment')} disabled={!reply.trim()} type="submit">
             <Send aria-hidden="true" size={18} />
           </Button>
         </form>
@@ -157,6 +159,7 @@ function CommentsSheet({
 }
 
 export function ReelsPage() {
+  const { t } = useTranslation()
   const [isPlaying, setIsPlaying] = useState(false)
   const [liked, setLiked] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -171,16 +174,16 @@ export function ReelsPage() {
   }, [])
 
   function addComment(text: string) {
-    setComments((current) => [...current, { author: 'Toi', city: 'Ta communauté', text }])
+    setComments((current) => [...current, { author: t('social.you'), city: t('social.yourCommunity'), text }])
   }
 
   async function shareReel() {
     try {
       await navigator.clipboard.writeText(window.location.href)
-      setMessage('Lien du Reel copié.')
+      setMessage(t('social.copiedReel'))
     } catch (error) {
-      console.error('Impossible de copier le lien du Reel.', error)
-      setMessage('Le partage est indisponible pour le moment.')
+      console.error('Unable to copy the Reel link.', error)
+      setMessage(t('social.shareUnavailable'))
     }
   }
 
@@ -211,9 +214,9 @@ export function ReelsPage() {
     <ResponsiveLayout title="Reels">
       <div className="social-reel-page">
         <div className="social-reel-stage">
-          <article aria-label="Reel de Maya Santos" className="social-reel-card">
+          <article aria-label={t('social.reel', { author: selectedReel.author })} className="social-reel-card">
             <div
-              aria-label="Vidéo — cliquer pour lire ou mettre en pause, double-cliquer pour aimer"
+              aria-label={t('social.videoControls')}
               className="social-reel-media"
               onClick={handleMediaClick}
               onDoubleClick={handleMediaDoubleClick}
@@ -227,7 +230,7 @@ export function ReelsPage() {
               }}
             >
               <img
-                alt="Une rue de Lisbonne traversée par un tramway"
+                alt={t('social.tramAlt')}
                 className="social-reel-image"
                 draggable={false}
                 src={communityStory}
@@ -238,7 +241,7 @@ export function ReelsPage() {
               <Heart aria-hidden="true" className="social-reel-like-feedback" fill="currentColor" size={88} />
             )}
             <button
-              aria-label={isPlaying ? 'Mettre le Reel en pause' : 'Lire le Reel'}
+              aria-label={isPlaying ? t('social.pauseReel') : t('social.playReel')}
               aria-pressed={isPlaying}
               className="social-reel-play"
               onClick={handleMediaClick}
@@ -247,9 +250,9 @@ export function ReelsPage() {
             >
               {isPlaying ? <Pause aria-hidden="true" size={28} /> : <Play aria-hidden="true" size={28} />}
             </button>
-            <div aria-label="Actions du Reel" className="social-reel-actions">
+            <div aria-label={t('social.reelActions')} className="social-reel-actions">
               <button
-                aria-label={liked ? 'Retirer le J’aime' : 'Aimer le Reel'}
+                aria-label={liked ? t('social.removeLike') : t('social.likeReel')}
                 aria-pressed={liked}
                 className={`social-reel-action${liked ? ' is-active' : ''}`}
                 onClick={() => setLiked((current) => !current)}
@@ -259,7 +262,7 @@ export function ReelsPage() {
                 <span>{liked ? '1,3k' : '1,2k'}</span>
               </button>
               <button
-                aria-label="Voir les réponses"
+                aria-label={t('social.viewReplies')}
                 aria-expanded={commentsOpen}
                 className="social-reel-action"
                 onClick={() => setCommentsOpen(true)}
@@ -271,18 +274,18 @@ export function ReelsPage() {
                 </span>
               </button>
               <button
-                aria-label={saved ? 'Retirer des favoris' : 'Enregistrer le Reel'}
+                aria-label={saved ? t('social.removeSaved') : t('social.saveReel')}
                 aria-pressed={saved}
                 className={`social-reel-action${saved ? ' is-active' : ''}`}
                 onClick={() => setSaved((current) => !current)}
                 type="button"
               >
                 <Bookmark aria-hidden="true" fill={saved ? 'currentColor' : 'none'} size={23} />
-                <span>{saved ? 'Enregistré' : 'Garder'}</span>
+                <span>{saved ? t('social.saved') : t('social.keep')}</span>
               </button>
-              <button aria-label="Partager le Reel" className="social-reel-action" onClick={shareReel} type="button">
+              <button aria-label={t('social.shareReel')} className="social-reel-action" onClick={shareReel} type="button">
                 <Share2 aria-hidden="true" size={23} />
-                <span>Partager</span>
+                <span>{t('social.share')}</span>
               </button>
             </div>
             <div className="social-reel-copy">
@@ -297,19 +300,19 @@ export function ReelsPage() {
               <p className="social-reel-tags">
                 {selectedReel.tags.map((tag) => `#${tag}`).join(' ')}
               </p>
-              <div aria-label={isPlaying ? 'Lecture de démonstration' : 'Reel en pause'} className="social-reel-progress">
+              <div aria-label={isPlaying ? t('social.demoPlaying') : t('social.reelPaused')} className="social-reel-progress">
                 <span className={isPlaying ? 'is-playing' : ''} />
               </div>
             </div>
           </article>
         </div>
-        <aside aria-label="Découvrir Common" className="social-reel-aside">
+        <aside aria-label={`${t('social.discover')} Common`} className="social-reel-aside">
           <div className="social-aside-card">
-            <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> À découvrir</span>
-            <h2>Les idées dev circulent mieux ensemble.</h2>
-            <p>Regarde les Reels, partage une découverte et retrouve les devs de ta ville.</p>
+            <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> {t('social.discover')}</span>
+            <h2>{t('social.ideas')}</h2>
+            <p>{t('social.reelDescription')}</p>
             <Link className="social-inline-link" to="/forums">
-              Explorer la communauté <ArrowUpRight aria-hidden="true" size={16} />
+              {t('social.exploreCommunity')} <ArrowUpRight aria-hidden="true" size={16} />
             </Link>
           </div>
           <p aria-live="polite" className="social-status">{message}</p>
@@ -327,6 +330,7 @@ export function ReelsPage() {
 }
 
 function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) {
+  const { t } = useTranslation()
   const [liked, setLiked] = useState(false)
   const [reposted, setReposted] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
@@ -338,10 +342,10 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
     const url = new URL(postUrl, window.location.origin).toString()
     try {
       await navigator.clipboard.writeText(url)
-      setShareMessage('Lien copié.')
+      setShareMessage(t('social.copied'))
     } catch (error) {
-      console.error('Impossible de copier le lien de la publication.', error)
-      setShareMessage('Partage indisponible.')
+      console.error('Unable to copy the post link.', error)
+      setShareMessage(t('social.shareFailed'))
     }
   }
 
@@ -356,9 +360,9 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
       </header>
       <p className="social-post-copy">{post.caption}</p>
       <div className="social-post-tags">{post.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
-      <div aria-label="Actions de la publication" className="social-post-actions">
+      <div aria-label={t('social.postActions')} className="social-post-actions">
         <button
-          aria-label={liked ? 'Retirer le J’aime' : 'Aimer la publication'}
+          aria-label={liked ? t('social.removeLike') : t('social.likePost')}
           aria-pressed={liked}
           className={liked ? 'is-active' : ''}
           onClick={() => setLiked((current) => !current)}
@@ -368,7 +372,7 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
           <span>{post.likes + Number(liked)}</span>
         </button>
         <button
-          aria-label={`${post.replies} réponses`}
+          aria-label={t('social.replies', { count: post.replies })}
           aria-expanded={commentsOpen}
           onClick={() => setCommentsOpen(true)}
           type="button"
@@ -377,18 +381,18 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
           <span>{post.replies}</span>
         </button>
         <button
-          aria-label={reposted ? 'Annuler le repartage' : 'Repartager'}
+          aria-label={reposted ? t('social.undoRepost') : t('social.repost')}
           aria-pressed={reposted}
           className={reposted ? 'is-active' : ''}
           onClick={() => setReposted((current) => !current)}
           type="button"
         >
           <Repeat2 aria-hidden="true" size={19} />
-          <span>{reposted ? 'Partagé' : 'Repartager'}</span>
+          <span>{reposted ? t('social.shared') : t('social.repost')}</span>
         </button>
-        <button aria-label="Partager la publication" onClick={sharePost} type="button">
+        <button aria-label={t('social.sharePost')} onClick={sharePost} type="button">
           <Share2 aria-hidden="true" size={19} />
-          <span>Partager</span>
+          <span>{t('social.share')}</span>
         </button>
       </div>
       {shareMessage && <p aria-live="polite" className="social-share-status">{shareMessage}</p>}
@@ -396,7 +400,7 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
         comments={comments}
         count={post.replies + comments.length - sampleReplies.length}
         onClose={() => setCommentsOpen(false)}
-        onSubmit={(text) => setComments((current) => [...current, { author: 'Toi', city: 'Ta communauté', text }])}
+        onSubmit={(text) => setComments((current) => [...current, { author: t('social.you'), city: t('social.yourCommunity'), text }])}
         open={commentsOpen}
       />
     </article>
@@ -404,39 +408,41 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
 }
 
 function CommunitySidebar() {
+  const { t } = useTranslation()
   return (
-    <aside aria-label="Ta communauté" className="social-community-sidebar">
+    <aside aria-label={t('social.community')} className="social-community-sidebar">
       <section className="social-aside-card social-city-card">
-        <span className="social-eyebrow"><UsersRound aria-hidden="true" size={16} /> Ta communauté</span>
-        <h2>Dakar</h2>
-        <p>Retrouve les développeurs, projets et conversations de ta ville.</p>
+        <span className="social-eyebrow"><UsersRound aria-hidden="true" size={16} /> {t('social.community')}</span>
+        <h2>{t('social.city')}</h2>
+        <p>{t('social.cityDescription')}</p>
         <Link className="social-inline-link" to="/forums/city">
-          Visiter le forum local <ArrowUpRight aria-hidden="true" size={16} />
+          {t('social.visitForum')} <ArrowUpRight aria-hidden="true" size={16} />
         </Link>
       </section>
       <section className="social-aside-card social-prompt-card">
-        <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> Défi du jour</span>
-        <h2>Une petite idée peut débloquer un gros projet.</h2>
-        <p>Réponds au défi de la communauté et apprends avec les autres.</p>
+        <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> {t('social.dailyChallenge')}</span>
+        <h2>{t('social.challengeTitle')}</h2>
+        <p>{t('social.challengeDescription')}</p>
         <Link className="social-inline-link" to="/quiz">
-          Voir les quiz <ArrowUpRight aria-hidden="true" size={16} />
+          {t('social.seeQuizzes')} <ArrowUpRight aria-hidden="true" size={16} />
         </Link>
       </section>
       <section className="social-aside-card social-progress-card">
-        <h2>Un pas chaque jour</h2>
-        <p>Niveau 4 · Curieux du quartier</p>
+        <h2>{t('social.dailyProgress')}</h2>
+        <p>{t('social.level')}</p>
         <ProgressBar value={1280} max={1500} />
-        <strong>1 280 / 1 500 points</strong>
+        <strong>{t('social.pointsProgress')}</strong>
       </section>
     </aside>
   )
 }
 
 export function TweetsPage() {
+  const { t } = useTranslation()
   return (
-    <ResponsiveLayout title="Publications">
+    <ResponsiveLayout title={t('social.posts')}>
       <div className="social-feed-layout">
-        <section aria-label="Publications de la communauté" className="social-post-list">
+        <section aria-label={t('social.communityPosts')} className="social-post-list">
           {textPosts.map((post) => <PostCard key={post.id} post={post} />)}
         </section>
         <CommunitySidebar />
@@ -446,6 +452,7 @@ export function TweetsPage() {
 }
 
 export function TweetRepliesPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const post = posts.find((item) => item.id === id)
   const [reply, setReply] = useState('')
@@ -455,54 +462,54 @@ export function TweetRepliesPage() {
     event.preventDefault()
     const text = reply.trim()
     if (!text) return
-    setReplies((current) => [...current, { author: 'Toi', city: 'Ta communauté', text }])
+    setReplies((current) => [...current, { author: t('social.you'), city: t('social.yourCommunity'), text }])
     setReply('')
   }
 
   if (!post) {
     return (
-      <ResponsiveLayout title="Réponses">
+      <ResponsiveLayout title={t('social.repliesTitle')}>
         <EmptyState
-          description="Cette publication n’existe pas ou a été supprimée."
-          title="Conversation introuvable"
+          description={t('social.missingPost')}
+          title={t('social.missingConversation')}
         />
       </ResponsiveLayout>
     )
   }
 
   return (
-    <ResponsiveLayout title="Réponses">
+    <ResponsiveLayout title={t('social.repliesTitle')}>
       <div className="social-feed-layout social-replies-layout">
-        <section aria-label="Conversation" className="social-post-list">
+        <section aria-label={t('social.conversation')} className="social-post-list">
           <PostCard compact post={post} />
-          <h2 className="social-replies-heading">{post.replies + replies.length} réponses</h2>
+          <h2 className="social-replies-heading">{t('social.replies', { count: post.replies + replies.length })}</h2>
           {replies.map((item, index) => (
             <article className="social-post social-reply" key={`${item.author}-${index}`}>
               <header className="social-post-author">
                 <img alt="" src={communityPortrait} />
                 <div>
                   <strong>{item.author}</strong>
-                  <span>{item.city} · à l’instant</span>
+                  <span>{item.city} · {t('social.justNow')}</span>
                 </div>
               </header>
               <p className="social-post-copy">{item.text}</p>
               <div className="social-post-actions">
-                <button aria-label="Aimer la réponse" type="button"><Heart aria-hidden="true" size={19} /><span>J’aime</span></button>
-                <button aria-label="Partager la réponse" type="button"><Share2 aria-hidden="true" size={19} /><span>Partager</span></button>
+                <button aria-label={t('social.likeReply')} type="button"><Heart aria-hidden="true" size={19} /><span>{t('social.like')}</span></button>
+                <button aria-label={t('social.shareReply')} type="button"><Share2 aria-hidden="true" size={19} /><span>{t('social.share')}</span></button>
               </div>
             </article>
           ))}
           <form className="social-reply-form" onSubmit={submitReply}>
             <Input
-              aria-label="Ta réponse"
-              label="Répondre à la conversation"
+              aria-label={t('social.yourReply')}
+              label={t('social.replyConversation')}
               onChange={(event) => setReply(event.currentTarget.value)}
-              placeholder="Ajoute une réponse utile…"
+              placeholder={t('social.replyPlaceholder')}
               value={reply}
             />
-            <Button aria-label="Envoyer la réponse" disabled={!reply.trim()} type="submit">
+            <Button aria-label={t('social.sendReply')} disabled={!reply.trim()} type="submit">
               <Send aria-hidden="true" size={18} />
-              Répondre
+              {t('social.reply')}
             </Button>
           </form>
         </section>
@@ -513,17 +520,15 @@ export function TweetRepliesPage() {
 }
 
 export function CreatePage() {
+  const { t } = useTranslation()
   return (
-    <ResponsiveLayout title="Créer">
+    <ResponsiveLayout title={t('social.create')}>
       <section className="social-create-placeholder">
-        <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> Espace de création</span>
-        <h2>Ton prochain partage commence ici.</h2>
-        <p>
-          Cet espace accueillera plusieurs façons de contribuer à Common.
-          Les options seront ajoutées quand tu auras choisi les formats à proposer.
-        </p>
+        <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> {t('social.createSpace')}</span>
+        <h2>{t('social.createTitle')}</h2>
+        <p>{t('social.createDescription')}</p>
         <Link className="social-inline-link" to="/home/reels">
-          Retour au fil <ArrowUpRight aria-hidden="true" size={16} />
+          {t('social.backToFeed')} <ArrowUpRight aria-hidden="true" size={16} />
         </Link>
       </section>
     </ResponsiveLayout>

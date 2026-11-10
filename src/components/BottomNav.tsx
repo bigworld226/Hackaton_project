@@ -5,18 +5,20 @@ import {
   Plus,
   UserRound,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 
-const navigationItems = [
-  { href: '/home/reels', icon: House, label: 'Reels' },
-  { href: '/forums', icon: MessageCircle, label: 'Forums' },
-  { href: '/notifications', icon: Bell, label: 'Alertes' },
-  { href: '/profile', icon: UserRound, label: 'Profil' },
-]
-
 export function BottomNav() {
+  const { t } = useTranslation()
+  const navigationItems = [
+    { href: '/home/reels', icon: House, label: t('nav.reels') },
+    { href: '/forums', icon: MessageCircle, label: t('nav.forums') },
+    { href: '/notifications', icon: Bell, label: t('nav.notifications') },
+    { href: '/profile', icon: UserRound, label: t('nav.profile') },
+  ]
+
   return (
-    <nav aria-label="Navigation principale" className="ui-bottom-nav">
+    <nav aria-label={t('nav.main')} className="ui-bottom-nav">
       {navigationItems.map(({ href, icon: Icon, label }) => (
         <NavLink
           className={({ isActive }) =>
@@ -31,7 +33,7 @@ export function BottomNav() {
         </NavLink>
       ))}
       <NavLink
-        aria-label="Ouvrir les fonctions de création"
+        aria-label={t('nav.create')}
         className="ui-create-action"
         to="/create"
       >

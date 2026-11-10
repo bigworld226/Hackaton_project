@@ -1,15 +1,19 @@
 import { Check, Code2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Input } from '@/components'
 import communityPortrait from '@/assets/community-portrait.jpg'
+import { getCountryName } from '@/data/countries'
 
 interface OnboardingLocation {
   city?: string
+  countryCode?: string
   country?: string
 }
 
 export function SignupPage() {
+  const { i18n, t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const onboardingLocation = (location.state ?? {}) as OnboardingLocation
@@ -26,13 +30,12 @@ export function SignupPage() {
       <main className="onboarding-screen">
         <section aria-live="polite" className="onboarding-success">
           <div className="onboarding-success-icon"><Check aria-hidden="true" size={30} /></div>
-          <p className="onboarding-step-label">TON PROFIL EST PRÊT</p>
-          <h1>Bienvenue dans la communauté.</h1>
-          <p>
-            Ton compte de démonstration est prêt
-            {onboardingLocation.city ? ` pour rejoindre les devs de ${onboardingLocation.city}` : ''}.
-          </p>
-          <Button onClick={() => navigate('/home/reels')}>Voir les vidéos de code</Button>
+          <p className="onboarding-step-label">{t('onboarding.profileReady')}</p>
+          <h1>{t('onboarding.welcomeCommunityTitle')}</h1>
+          <p>{onboardingLocation.city
+            ? t('onboarding.demoReady', { city: onboardingLocation.city })
+            : t('onboarding.demoReadyGeneral')}</p>
+          <Button onClick={() => navigate('/home/reels')}>{t('onboarding.seeVideos')}</Button>
         </section>
       </main>
     )
@@ -41,33 +44,35 @@ export function SignupPage() {
   return (
     <main className="onboarding-screen">
       <aside className="onboarding-sidebar">
-        <Link aria-label="Common, accueil" className="onboarding-brand" to="/welcome">
+        <Link aria-label={t('onboarding.home')} className="onboarding-brand" to="/welcome">
           common<span>.</span>
         </Link>
         <div className="onboarding-sidebar-copy">
-          <p>Ton prochain projet.</p>
-          <p>Ton prochain déclic.</p>
-          <p>Ton prochain crew.</p>
+          <p>{t('onboarding.signupLine1')}</p>
+          <p>{t('onboarding.signupLine2')}</p>
+          <p>{t('onboarding.signupLine3')}</p>
         </div>
-        <p className="onboarding-sidebar-foot">TON PROFIL, TES RÈGLES</p>
+        <p className="onboarding-sidebar-foot">{t('onboarding.signupFoot')}</p>
       </aside>
 
       <div className="onboarding-workspace">
         <header className="onboarding-header">
-          <Link className="onboarding-back-link" to="/place">← Retour</Link>
-          <p>ÉTAPE 3 SUR 3</p>
-          <h1>Fais-toi une place.</h1>
+          <Link className="onboarding-back-link" to="/place">{t('onboarding.back')}</Link>
+          <p>{t('onboarding.step3')}</p>
+          <h1>{t('onboarding.makePlace')}</h1>
         </header>
 
         <div className="onboarding-columns">
           <section aria-labelledby="signup-title" className="onboarding-content onboarding-content--form">
             <div className="onboarding-form-intro">
               <Code2 aria-hidden="true" className="onboarding-inline-mark" size={24} />
-              <h2 id="signup-title">Crée ton profil dev.</h2>
-              <p>Rejoins les conversations et partage ton prochain petit déclic.</p>
+              <h2 id="signup-title">{t('onboarding.createProfile')}</h2>
+              <p>{t('onboarding.joinConversation')}</p>
               {onboardingLocation.city && (
                 <span className="onboarding-location-chip">
-                  {onboardingLocation.city}{onboardingLocation.country ? ` · ${onboardingLocation.country}` : ''}
+                  {onboardingLocation.city}{onboardingLocation.countryCode
+                    ? ` · ${getCountryName(onboardingLocation.countryCode, i18n.resolvedLanguage ?? 'fr')}`
+                    : onboardingLocation.country ? ` · ${onboardingLocation.country}` : ''}
                 </span>
               )}
             </div>
@@ -75,68 +80,67 @@ export function SignupPage() {
             <form className="onboarding-form-fields" onSubmit={handleSubmit}>
               <Input
                 autoComplete="name"
-                label="Nom affiché"
+                label={t('onboarding.displayName')}
                 maxLength={40}
                 name="displayName"
-                placeholder="Ex. Maya Santos"
+                placeholder={t('onboarding.namePlaceholder')}
                 required
               />
               <Input
                 autoComplete="email"
-                label="Adresse e-mail"
+                label={t('onboarding.email')}
                 name="email"
-                placeholder="toi@exemple.com"
+                placeholder={t('onboarding.emailPlaceholder')}
                 required
                 type="email"
               />
               <Input
                 autoComplete="new-password"
-                hint="8 caractères minimum, avec au moins un chiffre."
-                label="Mot de passe"
+                hint={t('onboarding.passwordHint')}
+                label={t('onboarding.password')}
                 minLength={8}
                 name="password"
                 pattern="(?=.*[0-9]).{8,}"
-                placeholder="Choisis un mot de passe"
+                placeholder={t('onboarding.passwordPlaceholder')}
                 required
-                title="8 caractères minimum et au moins un chiffre."
+                title={t('onboarding.passwordTitle')}
                 type="password"
               />
               <label className="onboarding-terms">
                 <input name="terms" required type="checkbox" />
                 <span>
-                  J’accepte les conditions d’utilisation et les règles de la
-                  communauté.
+                  {t('onboarding.terms')}
                 </span>
               </label>
               <Button className="onboarding-submit" type="submit">
-                Créer mon compte
+                {t('onboarding.createAccount')}
               </Button>
               <p className="onboarding-login-note">
-                Déjà membre ? <Link to="/home/reels">Explorer Common</Link>
+                {t('onboarding.alreadyMember')} <Link to="/home/reels">{t('onboarding.exploreCommon')}</Link>
               </p>
               <p className="onboarding-demo-note">
-                Démo d’interface : aucun compte réel n’est créé.
+                {t('onboarding.demo')}
               </p>
             </form>
 
-            <p className="onboarding-progress">3 SUR 3 · TON AVENTURE COMMENCE</p>
+            <p className="onboarding-progress">{t('onboarding.signupProgress')}</p>
           </section>
 
-          <aside aria-label="Bienvenue dans la communauté" className="onboarding-aside">
+          <aside aria-label={t('onboarding.welcomeCommunity')} className="onboarding-aside">
             <article className="onboarding-photo-card">
               <img
-                alt="Une développeuse de la communauté"
+                alt={t('onboarding.developerAlt')}
                 className="onboarding-photo-card-image"
                 src={communityPortrait}
               />
               <div>
-                <h2>Ta prochaine collab commence par un hello.</h2>
-                <p>Apprends avec les autres, partage tes idées et trouve ta tribu tech.</p>
+                <h2>{t('onboarding.collab')}</h2>
+                <p>{t('onboarding.collabText')}</p>
               </div>
             </article>
             <article className="onboarding-promise-card">
-              <h2>Un espace pour apprendre en public.</h2>
-              <p>Pas besoin d’être expert. Juste l’envie de construire et de partager.</p>
+              <h2>{t('onboarding.learnPublic')}</h2>
+              <p>{t('onboarding.noExpert')}</p>
             </article>
           </aside>
         </div>

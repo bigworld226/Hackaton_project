@@ -1,3 +1,7 @@
+.ui-page-content:has(.quiz-page) {
+  width: min(100%, 1120px);
+}
+
 .quiz-page {
   display: grid;
   width: min(100%, 1120px);

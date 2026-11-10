@@ -14,7 +14,9 @@ import {
   Trophy,
   X,
 } from 'lucide-react'
+import type { TFunction } from 'i18next'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Badge, Button, EmptyState, Input, ProgressBar, Tabs } from '@/components'
 import {
@@ -46,6 +48,20 @@ const difficultyVariants: Record<Quiz['difficulty'], 'success' | 'warning' | 'da
   Avancé: 'danger',
 }
 
+const validationMessageKeys: Record<string, string> = {
+  'Le titre doit contenir au moins 4 caractères.': 'quiz.validationTitle',
+  'Ajoute une description d’au moins 12 caractères.': 'quiz.validationDescription',
+  'Ajoute au moins une question.': 'quiz.validationQuestion',
+  'Chaque question doit contenir au moins 8 caractères.': 'quiz.validationPrompt',
+  'Chaque question doit proposer au moins deux réponses.': 'quiz.validationOptions',
+  'Ajoute une explication pour chaque bonne réponse.': 'quiz.validationExplanation',
+}
+
+function translateValidationMessage(error: string, t: TFunction) {
+  const key = validationMessageKeys[error]
+  return key ? t(key) : error
+}
+
 function QuizIntro({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return (
     <header className="quiz-intro">
@@ -57,60 +73,62 @@ function QuizIntro({ eyebrow, title, description }: { eyebrow: string; title: st
 }
 
 function QuizCard({ quiz, compact = false }: { quiz: ExperienceQuiz; compact?: boolean }) {
+  const { i18n, t } = useTranslation()
   return (
     <article className={`quiz-card${compact ? ' quiz-card--compact' : ''}`}>
       <div className="quiz-card-topline">
         <span className="quiz-topic-icon"><Code2 aria-hidden="true" size={19} /></span>
         <Badge>{quiz.topic}</Badge>
-        <Badge variant={difficultyVariants[quiz.difficulty]}>{quiz.difficulty}</Badge>
+        <Badge variant={difficultyVariants[quiz.difficulty]}>{t(`quiz.difficulty.${quiz.difficulty}`, { defaultValue: quiz.difficulty })}</Badge>
       </div>
       <div className="quiz-card-copy">
         <h3>{quiz.title}</h3>
         <p>{quiz.description}</p>
       </div>
       <div className="quiz-card-meta">
-        <span><ListChecks aria-hidden="true" size={15} /> {quiz.questions.length} questions</span>
-        <span><Clock3 aria-hidden="true" size={15} /> {quiz.durationMinutes} min</span>
-        {!quiz.isMine && <span>{quiz.plays.toLocaleString('fr-FR')} parties</span>}
+        <span><ListChecks aria-hidden="true" size={15} /> {t('quiz.questionCount', { count: quiz.questions.length })}</span>
+        <span><Clock3 aria-hidden="true" size={15} /> {t('quiz.minutes', { count: quiz.durationMinutes })}</span>
+        {!quiz.isMine && <span>{quiz.plays.toLocaleString(i18n.resolvedLanguage ?? 'fr')} {t('quiz.games')}</span>}
       </div>
       <Link className="quiz-card-link" to={`/quiz/${quiz.id}`}>
-        {quiz.isMine ? 'Gérer le quiz' : 'Découvrir le quiz'} <ArrowRight aria-hidden="true" size={16} />
+        {quiz.isMine ? t('quiz.manage') : t('quiz.discover')} <ArrowRight aria-hidden="true" size={16} />
       </Link>
     </article>
   )
 }
 
 export function QuizHubPage() {
-  const [topic, setTopic] = useState('Tout')
-  const topics = ['Tout', ...new Set(getQuizCatalog().map((quiz) => quiz.topic))]
-  const visibleQuizzes = getQuizCatalog().filter((quiz) => topic === 'Tout' || quiz.topic === topic)
+  const { t } = useTranslation()
+  const [topic, setTopic] = useState('all')
+  const topics = [{ label: t('quiz.allTopics'), value: 'all' }, ...[...new Set(getQuizCatalog().map((quiz) => quiz.topic))].map((item) => ({ label: item, value: item }))]
+  const visibleQuizzes = getQuizCatalog().filter((quiz) => topic === 'all' || quiz.topic === topic)
 
   function beginCreation() {
     createQuizDraft()
   }
 
   return (
-    <ResponsiveLayout title="Quiz dev">
+    <ResponsiveLayout title={t('quiz.appTitle')}>
       <div className="quiz-page">
         <QuizIntro
-          description="Mets tes connaissances à l’épreuve, découvre de nouveaux concepts et progresse avec la communauté."
-          eyebrow="Apprendre en jouant"
-          title="Un petit défi entre deux lignes de code ?"
+          description={t('quiz.hubDescription')}
+          eyebrow={t('quiz.hubEyebrow')}
+          title={t('quiz.hubHeading')}
         />
         <div className="quiz-hub-actions">
-          <Link className="quiz-secondary-link" to="/quiz/mine"><BookOpenCheck aria-hidden="true" size={18} /> Mes quiz</Link>
-          <Link className="quiz-create-link" onClick={beginCreation} to="/quiz/editor"><Plus aria-hidden="true" size={18} /> Créer un quiz</Link>
+          <Link className="quiz-secondary-link" to="/quiz/mine"><BookOpenCheck aria-hidden="true" size={18} /> {t('quiz.mine')}</Link>
+          <Link className="quiz-create-link" onClick={beginCreation} to="/quiz/editor"><Plus aria-hidden="true" size={18} /> {t('quiz.create')}</Link>
         </div>
-        <section aria-label="Quiz à découvrir" className="quiz-catalog-section">
+        <section aria-label={t('quiz.catalog')} className="quiz-catalog-section">
           <div className="quiz-section-heading">
             <div>
-              <span className="community-eyebrow">À toi de jouer</span>
-              <h2>Quiz de la communauté</h2>
+              <span className="community-eyebrow">{t('quiz.playEyebrow')}</span>
+              <h2>{t('quiz.catalog')}</h2>
             </div>
-            <span className="quiz-count">{visibleQuizzes.length} quiz</span>
+            <span className="quiz-count">{t('quiz.quizCount', { count: visibleQuizzes.length })}</span>
           </div>
           <Tabs
-            items={topics.map((item) => ({ label: item, value: item }))}
+            items={topics}
             onValueChange={setTopic}
             value={topic}
           />
@@ -119,7 +137,7 @@ export function QuizHubPage() {
               {visibleQuizzes.map((quiz) => <QuizCard key={quiz.id} quiz={quiz} />)}
             </div>
           ) : (
-            <EmptyState description="Essaie un autre thème ou crée le premier quiz de cette catégorie." title="Aucun quiz dans ce thème" />
+            <EmptyState description={t('quiz.noTopicDescription')} title={t('quiz.noTopicTitle')} />
           )}
         </section>
       </div>
@@ -128,6 +146,7 @@ export function QuizHubPage() {
 }
 
 export function MyQuizzesPage() {
+  const { t } = useTranslation()
   const owned = getOwnedQuizzes()
 
   function beginCreation() {
@@ -135,12 +154,12 @@ export function MyQuizzesPage() {
   }
 
   return (
-    <ResponsiveLayout title="Mes quiz">
+    <ResponsiveLayout title={t('quiz.mine')}>
       <div className="quiz-page">
         <QuizIntro
-          description="Retrouve tes créations, peaufine-les ou partage-les avec les développeurs."
-          eyebrow="Ton atelier"
-          title="Mes quiz"
+          description={t('quiz.mineDescription')}
+          eyebrow={t('quiz.workshop')}
+          title={t('quiz.mine')}
         />
         {owned.length ? (
           <div className="quiz-grid">
@@ -148,10 +167,10 @@ export function MyQuizzesPage() {
           </div>
         ) : (
           <EmptyState
-            action={<Link className="quiz-create-link" onClick={beginCreation} to="/quiz/editor"><Plus aria-hidden="true" size={17} /> Créer mon premier quiz</Link>}
-            description="Crée un quiz pour partager tes connaissances et aider d’autres devs à progresser."
+            action={<Link className="quiz-create-link" onClick={beginCreation} to="/quiz/editor"><Plus aria-hidden="true" size={17} /> {t('quiz.createFirst')}</Link>}
+            description={t('quiz.emptyMineDescription')}
             icon={<Lightbulb aria-hidden="true" size={25} />}
-            title="Tu n’as pas encore créé de quiz"
+            title={t('quiz.emptyMineTitle')}
           />
         )}
       </div>
@@ -160,6 +179,7 @@ export function MyQuizzesPage() {
 }
 
 export function QuizDetailsPage() {
+  const { t } = useTranslation()
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const quiz = getExperienceQuiz(id)
@@ -170,29 +190,29 @@ export function QuizDetailsPage() {
   }
 
   return (
-    <ResponsiveLayout title={quiz?.title ?? 'Quiz introuvable'}>
+    <ResponsiveLayout title={quiz?.title ?? t('quiz.notFound')}>
       <div className="quiz-page">
         {quiz ? (
           <section className="quiz-detail-card">
-            <Link className="quiz-back-link" to="/quiz"><ArrowLeft aria-hidden="true" size={16} /> Tous les quiz</Link>
+            <Link className="quiz-back-link" to="/quiz"><ArrowLeft aria-hidden="true" size={16} /> {t('quiz.allQuizzes')}</Link>
             <span className="quiz-topic-icon quiz-topic-icon--large"><Code2 aria-hidden="true" size={25} /></span>
             <div className="quiz-detail-badges">
               <Badge>{quiz.topic}</Badge>
-              <Badge variant={difficultyVariants[quiz.difficulty]}>{quiz.difficulty}</Badge>
+              <Badge variant={difficultyVariants[quiz.difficulty]}>{t(`quiz.difficulty.${quiz.difficulty}`, { defaultValue: quiz.difficulty })}</Badge>
             </div>
             <h2>{quiz.title}</h2>
             <p className="quiz-detail-description">{quiz.description}</p>
             <div className="quiz-detail-stats">
-              <span><ListChecks aria-hidden="true" size={18} /><strong>{quiz.questions.length}</strong> questions</span>
-              <span><Clock3 aria-hidden="true" size={18} /><strong>{quiz.durationMinutes}</strong> min</span>
-              <span><Trophy aria-hidden="true" size={18} />Créé par <strong>{quiz.author}</strong></span>
+              <span><ListChecks aria-hidden="true" size={18} /><strong>{quiz.questions.length}</strong> {t('quiz.questions').toLowerCase()}</span>
+              <span><Clock3 aria-hidden="true" size={18} /><strong>{quiz.durationMinutes}</strong> {t('quiz.minutes', { count: quiz.durationMinutes })}</span>
+              <span><Trophy aria-hidden="true" size={18} />{t('quiz.createdBy')} <strong>{quiz.author}</strong></span>
             </div>
             <div className="quiz-detail-note">
               <CircleHelp aria-hidden="true" size={20} />
-              <p>Choisis une réponse à chaque question. Tu découvriras ton résultat et les explications à la fin.</p>
+              <p>{t('quiz.instructions')}</p>
             </div>
             <div className="quiz-detail-actions">
-              <Button onClick={playQuiz} type="button">Lancer le quiz <ArrowRight aria-hidden="true" size={18} /></Button>
+              <Button onClick={playQuiz} type="button">{t('quiz.launch')} <ArrowRight aria-hidden="true" size={18} /></Button>
               {quiz.isMine && (
                 <Button
                   onClick={() => {
@@ -201,13 +221,13 @@ export function QuizDetailsPage() {
                   type="button"
                   variant="secondary"
                 >
-                  Modifier mon quiz
+                  {t('quiz.edit')}
                 </Button>
               )}
             </div>
           </section>
         ) : (
-          <EmptyState action={<Link to="/quiz">Explorer les quiz</Link>} description="Ce quiz n’existe pas ou n’est plus disponible." title="Quiz introuvable" />
+          <EmptyState action={<Link to="/quiz">{t('quiz.explore')}</Link>} description={t('quiz.missingDescription')} title={t('quiz.notFound')} />
         )}
       </div>
     </ResponsiveLayout>
@@ -228,6 +248,7 @@ function questionLabelId(index: number, field: string) {
 }
 
 export function QuizEditorPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [draft, setDraft] = useState(getQuizDraft)
   const [error, setError] = useState('')
@@ -258,71 +279,71 @@ export function QuizEditorPage() {
   function handlePreview() {
     const validationError = validateQuizDraft(draft)
     if (validationError) {
-      setError(validationError)
+      setError(translateValidationMessage(validationError, t))
       return
     }
     navigate('/quiz/preview')
   }
 
   return (
-    <ResponsiveLayout title="Éditeur de quiz">
+    <ResponsiveLayout title={t('quiz.editorTitle')}>
       <div className="quiz-page quiz-editor-page">
         <QuizIntro
-          description="Prépare un défi clair, donne des choix utiles et explique les bonnes réponses."
-          eyebrow="Créateur de quiz"
-          title="Transmets ce que tu as appris."
+          description={t('quiz.editorDescription')}
+          eyebrow={t('quiz.creator')}
+          title={t('quiz.editorHeading')}
         />
         <section className="quiz-editor-card">
           <div className="quiz-editor-fields">
             <Input
-              label="Titre du quiz"
+              label={t('quiz.titleLabel')}
               maxLength={90}
               onChange={(event) => updateText('title', event.currentTarget.value)}
-              placeholder="Ex. Les fondamentaux de React"
+              placeholder={t('quiz.titlePlaceholder')}
               value={draft.title}
             />
             <div className="ui-field">
-              <label className="ui-label" htmlFor="quiz-description">Description</label>
+              <label className="ui-label" htmlFor="quiz-description">{t('quiz.descriptionLabel')}</label>
               <textarea
                 className="community-textarea quiz-description-input"
                 id="quiz-description"
                 maxLength={240}
                 onChange={(event) => updateText('description', event.currentTarget.value)}
-                placeholder="Explique ce que les participants vont apprendre…"
+                placeholder={t('quiz.descriptionPlaceholder')}
                 rows={3}
                 value={draft.description}
               />
             </div>
             <div className="quiz-editor-meta">
               <Input
-                label="Thème"
+                label={t('quiz.topic')}
                 onChange={(event) => updateText('topic', event.currentTarget.value)}
                 placeholder="Ex. React"
                 value={draft.topic}
               />
               <div className="ui-field">
-                <label className="ui-label" htmlFor="quiz-difficulty">Difficulté</label>
+                <label className="ui-label" htmlFor="quiz-difficulty">{t('quiz.difficultyLabel')}</label>
                 <select
                   className="ui-input"
                   id="quiz-difficulty"
                   onChange={(event) => update({ ...draft, difficulty: event.currentTarget.value as Quiz['difficulty'] })}
                   value={draft.difficulty}
                 >
-                  <option>Débutant</option>
-                  <option>Intermédiaire</option>
-                  <option>Avancé</option>
+                  <option value="Débutant">{t('quiz.difficulty.Débutant')}</option>
+                  <option value="Intermédiaire">{t('quiz.difficulty.Intermédiaire')}</option>
+                  <option value="Avancé">{t('quiz.difficulty.Avancé')}</option>
                 </select>
               </div>
             </div>
           </div>
           <div className="quiz-question-editor-heading">
-            <div><h3>Questions</h3><span>{draft.questions.length} question{draft.questions.length > 1 ? 's' : ''}</span></div>
+            <div><h3>{t('quiz.questions')}</h3><span>{t('quiz.questionCount', { count: draft.questions.length })}</span></div>
             <Button
               onClick={() => update({ ...draft, questions: [...draft.questions, { prompt: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '' }] })}
               type="button"
               variant="secondary"
             >
-              <Plus aria-hidden="true" size={17} /> Ajouter une question
+              <Plus aria-hidden="true" size={17} /> {t('quiz.addQuestion')}
             </Button>
           </div>
           <div className="quiz-question-editor-list">
@@ -330,10 +351,10 @@ export function QuizEditorPage() {
               <fieldset className="quiz-question-editor" key={index}>
                 <legend>
                   <span>{String(index + 1).padStart(2, '0')}</span>
-                  Question {index + 1}
+                  {t('quiz.question', { number: index + 1 })}
                   {draft.questions.length > 1 && (
                     <button
-                      aria-label={`Supprimer la question ${index + 1}`}
+                      aria-label={t('quiz.removeQuestion', { number: index + 1 })}
                       className="quiz-remove-question"
                       onClick={() => update({ ...draft, questions: draft.questions.filter((_, current) => current !== index) })}
                       type="button"
@@ -341,12 +362,12 @@ export function QuizEditorPage() {
                   )}
                 </legend>
                 <div className="ui-field">
-                  <label className="ui-label" htmlFor={questionLabelId(index, 'prompt')}>Énoncé</label>
+                  <label className="ui-label" htmlFor={questionLabelId(index, 'prompt')}>{t('quiz.prompt')}</label>
                   <textarea
                     className="community-textarea quiz-question-prompt"
                     id={questionLabelId(index, 'prompt')}
                     onChange={(event) => updateQuestionField(index, 'prompt', event.currentTarget.value)}
-                    placeholder="Pose une question précise…"
+                    placeholder={t('quiz.promptPlaceholder')}
                     rows={2}
                     value={question.prompt}
                   />
@@ -357,29 +378,29 @@ export function QuizEditorPage() {
                     return (
                       <div className={`quiz-answer-option${question.correctAnswer === optionIndex ? ' quiz-answer-option--correct' : ''}`} key={optionIndex}>
                         <input
-                          aria-label={`Marquer la réponse ${optionIndex + 1} comme correcte`}
+                          aria-label={t('quiz.markCorrect', { number: optionIndex + 1 })}
                           checked={question.correctAnswer === optionIndex}
                           name={`correct-answer-${index}`}
                           onChange={() => updateQuestionField(index, 'correctAnswer', optionIndex)}
                           type="radio"
                         />
-                        <label className="sr-only" htmlFor={inputId}>Réponse {optionIndex + 1}</label>
+                        <label className="sr-only" htmlFor={inputId}>{t('quiz.option', { number: optionIndex + 1 })}</label>
                         <input
                           className="ui-input"
                           id={inputId}
                           onChange={(event) => updateOption(index, optionIndex, event.currentTarget.value)}
-                          placeholder={`Réponse ${optionIndex + 1}`}
+                          placeholder={t('quiz.option', { number: optionIndex + 1 })}
                           value={option}
                         />
-                        {question.correctAnswer === optionIndex && <Check aria-label="Bonne réponse" size={17} />}
+                        {question.correctAnswer === optionIndex && <Check aria-label={t('quiz.correctAnswer')} size={17} />}
                       </div>
                     )
                   })}
                 </div>
                 <Input
-                  label="Explication de la bonne réponse"
+                  label={t('quiz.explanation')}
                   onChange={(event) => updateQuestionField(index, 'explanation', event.currentTarget.value)}
-                  placeholder="Pourquoi cette réponse est-elle correcte ?"
+                  placeholder={t('quiz.explanationPlaceholder')}
                   value={question.explanation}
                 />
               </fieldset>
@@ -387,8 +408,8 @@ export function QuizEditorPage() {
           </div>
           {error && <p className="quiz-form-error" role="alert">{error}</p>}
           <div className="quiz-editor-actions">
-            <Link className="quiz-back-link" to="/quiz"><ArrowLeft aria-hidden="true" size={16} /> Annuler</Link>
-            <Button onClick={handlePreview} type="button">Prévisualiser <ArrowRight aria-hidden="true" size={17} /></Button>
+            <Link className="quiz-back-link" to="/quiz"><ArrowLeft aria-hidden="true" size={16} /> {t('quiz.cancel')}</Link>
+            <Button onClick={handlePreview} type="button">{t('quiz.preview')} <ArrowRight aria-hidden="true" size={17} /></Button>
           </div>
         </section>
       </div>
@@ -397,6 +418,7 @@ export function QuizEditorPage() {
 }
 
 export function QuizPreviewPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const draft = getQuizDraft()
   const error = validateQuizDraft(draft)
@@ -405,46 +427,46 @@ export function QuizPreviewPage() {
   function publish() {
     const result = publishQuizDraft()
     if (!result.quiz) {
-      setPublishError(result.error ?? 'Impossible de publier ce quiz.')
+      setPublishError(result.error ? translateValidationMessage(result.error, t) : t('quiz.draftError'))
       return
     }
     navigate('/quiz/mine')
   }
 
   return (
-    <ResponsiveLayout title="Aperçu du quiz">
+    <ResponsiveLayout title={t('quiz.previewTitle')}>
       <div className="quiz-page">
         {error ? (
           <EmptyState
-            action={<Link className="quiz-create-link" to="/quiz/editor">Reprendre l’édition</Link>}
-            description={error}
-            title="Le quiz n’est pas encore prêt"
+            action={<Link className="quiz-create-link" to="/quiz/editor">{t('quiz.editQuiz')}</Link>}
+            description={translateValidationMessage(error, t)}
+            title={t('quiz.notReady')}
           />
         ) : (
           <section className="quiz-preview-card">
-            <Link className="quiz-back-link" to="/quiz/editor"><ArrowLeft aria-hidden="true" size={16} /> Modifier le quiz</Link>
+            <Link className="quiz-back-link" to="/quiz/editor"><ArrowLeft aria-hidden="true" size={16} /> {t('quiz.editQuiz')}</Link>
             <div className="quiz-preview-cover"><Sparkles aria-hidden="true" size={30} /><span>{draft.topic}</span></div>
-            <Badge variant={difficultyVariants[draft.difficulty]}>{draft.difficulty}</Badge>
+            <Badge variant={difficultyVariants[draft.difficulty]}>{t(`quiz.difficulty.${draft.difficulty}`)}</Badge>
             <h2>{draft.title}</h2>
             <p>{draft.description}</p>
             <div className="quiz-detail-stats">
-              <span><ListChecks aria-hidden="true" size={18} /><strong>{draft.questions.length}</strong> questions</span>
-              <span><Clock3 aria-hidden="true" size={18} /><strong>{Math.max(1, Math.ceil(draft.questions.length * 0.6))}</strong> min</span>
+              <span><ListChecks aria-hidden="true" size={18} /><strong>{draft.questions.length}</strong> {t('quiz.questions')}</span>
+              <span><Clock3 aria-hidden="true" size={18} /><strong>{Math.max(1, Math.ceil(draft.questions.length * 0.6))}</strong> {t('quiz.minutes', { count: Math.max(1, Math.ceil(draft.questions.length * 0.6)) })}</span>
               <span><Trophy aria-hidden="true" size={18} /><strong>Toi</strong></span>
             </div>
-            <h3>Un aperçu des questions</h3>
+            <h3>{t('quiz.previewQuestions')}</h3>
             <ol className="quiz-preview-questions">
               {draft.questions.map((question, index) => (
                 <li key={index}>
                   <strong>{question.prompt}</strong>
-                  <span>{question.options.filter((option) => option.trim()).length} choix de réponse</span>
+                  <span>{t('quiz.choices', { count: question.options.filter((option) => option.trim()).length })}</span>
                 </li>
               ))}
             </ol>
             {publishError && <p className="quiz-form-error" role="alert">{publishError}</p>}
             <div className="quiz-detail-actions">
-              <Button onClick={publish} type="button"><Check aria-hidden="true" size={17} /> Publier le quiz</Button>
-              <Button onClick={() => navigate('/quiz/editor')} type="button" variant="secondary">Continuer à modifier</Button>
+              <Button onClick={publish} type="button"><Check aria-hidden="true" size={17} /> {t('quiz.publish')}</Button>
+              <Button onClick={() => navigate('/quiz/editor')} type="button" variant="secondary">{t('quiz.continueEditing')}</Button>
             </div>
           </section>
         )}
@@ -458,6 +480,7 @@ function cloneRun(run: QuizRun | null): QuizRun | null {
 }
 
 export function QuizPlayPage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const quizId = searchParams.get('id') ?? ''
@@ -490,27 +513,27 @@ export function QuizPlayPage() {
 
   if (!run || !question) {
     return (
-      <ResponsiveLayout title="Jouer au quiz">
-        <div className="quiz-page"><EmptyState action={<Link to="/quiz">Retour aux quiz</Link>} description="Choisis un quiz avant de commencer une partie." title="Aucune partie en cours" /></div>
+      <ResponsiveLayout title={t('quiz.playTitle')}>
+        <div className="quiz-page"><EmptyState action={<Link to="/quiz">{t('quiz.backToQuizzes')}</Link>} description={t('quiz.noRunDescription')} title={t('quiz.noRun')} /></div>
       </ResponsiveLayout>
     )
   }
 
   return (
-    <ResponsiveLayout title="Partie en cours">
+    <ResponsiveLayout title={t('quiz.inProgress')}>
       <div className="quiz-page quiz-play-page">
-        <section aria-label="Partie de quiz" className="quiz-play-card">
+        <section aria-label={t('quiz.inProgress')} className="quiz-play-card">
           <div className="quiz-play-topline">
-            <Link aria-label="Quitter le quiz" className="quiz-icon-link" to={`/quiz/${run.quiz.id}`}><X aria-hidden="true" size={20} /></Link>
+            <Link aria-label={t('quiz.quit')} className="quiz-icon-link" to={`/quiz/${run.quiz.id}`}><X aria-hidden="true" size={20} /></Link>
             <span>{run.quiz.title}</span>
             <span>{run.currentQuestion + 1} / {run.quiz.questions.length}</span>
           </div>
-          <ProgressBar label="Ta progression" max={run.quiz.questions.length} value={progressValue} />
+          <ProgressBar label={t('quiz.progress')} max={run.quiz.questions.length} value={progressValue} />
           <div className="quiz-play-question">
-            <span className="community-eyebrow">Question {run.currentQuestion + 1}</span>
+            <span className="community-eyebrow">{t('quiz.questionLabel', { number: run.currentQuestion + 1 })}</span>
             <h2>{question.prompt}</h2>
           </div>
-          <div aria-label="Choisis une réponse" className="quiz-play-options">
+          <div aria-label={t('quiz.chooseAnswer')} className="quiz-play-options">
             {question.options.map((option, index) => (
               <button
                 aria-pressed={selectedAnswer === index}
@@ -524,11 +547,11 @@ export function QuizPlayPage() {
               </button>
             ))}
           </div>
-          {showError && <p className="quiz-form-error" role="alert">Choisis une réponse pour continuer.</p>}
+          {showError && <p className="quiz-form-error" role="alert">{t('quiz.unanswered')}</p>}
           <div className="quiz-play-footer">
-            <span>{run.quiz.questions.length - run.currentQuestion - 1} question{run.quiz.questions.length - run.currentQuestion - 1 === 1 ? '' : 's'} après celle-ci</span>
+            <span>{t('quiz.remaining', { count: run.quiz.questions.length - run.currentQuestion - 1 })}</span>
             <Button onClick={nextQuestion} type="button">
-              {run.currentQuestion === run.quiz.questions.length - 1 ? 'Voir mon résultat' : 'Question suivante'} <ArrowRight aria-hidden="true" size={17} />
+              {run.currentQuestion === run.quiz.questions.length - 1 ? t('quiz.seeResult') : t('quiz.nextQuestion')} <ArrowRight aria-hidden="true" size={17} />
             </Button>
           </div>
         </section>
@@ -538,6 +561,7 @@ export function QuizPlayPage() {
 }
 
 export function QuizResultsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const result = getQuizResult()
   const percentage = result ? Math.round((result.score / result.total) * 100) : 0
@@ -548,27 +572,27 @@ export function QuizResultsPage() {
   }
 
   return (
-    <ResponsiveLayout title="Résultats du quiz">
+    <ResponsiveLayout title={t('quiz.resultsTitle')}>
       <div className="quiz-page">
         {result ? (
           <section className="quiz-result-card">
             <span className="quiz-result-icon"><Trophy aria-hidden="true" size={31} /></span>
-            <span className="community-eyebrow">Quiz terminé</span>
-            <h2>{percentage >= 80 ? 'Excellent travail !' : percentage >= 50 ? 'Bien joué, continue !' : 'Chaque essai te fait progresser.'}</h2>
+            <span className="community-eyebrow">{t('quiz.completed')}</span>
+            <h2>{percentage >= 80 ? t('quiz.excellent') : percentage >= 50 ? t('quiz.good') : t('quiz.keepGoing')}</h2>
             <p>{result.quiz.title}</p>
-            <div className="quiz-result-score"><strong>{result.score}</strong><span> / {result.total} bonnes réponses</span></div>
-            <ProgressBar label="Ton score" max={result.total} value={result.score} />
+            <div className="quiz-result-score"><strong>{result.score}</strong><span>{t('quiz.correctAnswers', { total: result.total })}</span></div>
+            <ProgressBar label={t('quiz.yourScore')} max={result.total} value={result.score} />
             <div className="quiz-result-actions">
-              <Button onClick={retry} type="button"><RotateCcw aria-hidden="true" size={17} /> Rejouer</Button>
-              <Button onClick={() => navigate('/quiz')} type="button" variant="secondary">Explorer d’autres quiz</Button>
+              <Button onClick={retry} type="button"><RotateCcw aria-hidden="true" size={17} /> {t('quiz.retry')}</Button>
+              <Button onClick={() => navigate('/quiz')} type="button" variant="secondary">{t('quiz.exploreMore')}</Button>
             </div>
             <div className="quiz-result-review">
-              <h3>À retenir</h3>
+              <h3>{t('quiz.takeaways')}</h3>
               {result.quiz.questions.map((item, index) => {
                 const correct = result.answers[index] === item.correctAnswer
                 return (
                   <article className={`quiz-review-item${correct ? ' quiz-review-item--correct' : ''}`} key={index}>
-                    <span>{correct ? <Check aria-label="Bonne réponse" size={17} /> : <X aria-label="Mauvaise réponse" size={17} />}</span>
+                    <span>{correct ? <Check aria-label={t('quiz.correctAnswer')} size={17} /> : <X aria-label={t('quiz.incorrect')} size={17} />}</span>
                     <div><strong>{item.prompt}</strong><p>{item.explanation}</p></div>
                   </article>
                 )
@@ -576,7 +600,7 @@ export function QuizResultsPage() {
             </div>
           </section>
         ) : (
-          <EmptyState action={<Link to="/quiz">Explorer les quiz</Link>} description="Lance une partie pour découvrir ton score." title="Pas encore de résultat" />
+          <EmptyState action={<Link to="/quiz">{t('quiz.explore')}</Link>} description={t('quiz.noResultDescription')} title={t('quiz.noResult')} />
         )}
       </div>
     </ResponsiveLayout>
