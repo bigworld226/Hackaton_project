@@ -196,63 +196,6 @@
   appearance: auto;
 }
 
-.onboarding-city-list {
-  display: grid;
-  max-height: 248px;
-  overflow-y: auto;
-  border: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
-  border-radius: 20px;
-  padding: var(--space-2);
-  background: var(--surface);
-}
-
-.onboarding-city-option {
-  display: grid;
-  min-height: 58px;
-  grid-template-columns: 24px minmax(0, 1fr) 24px;
-  align-items: center;
-  gap: var(--space-3);
-  border: 0;
-  border-radius: var(--radius-card);
-  padding: var(--space-2) var(--space-3);
-  color: var(--muted);
-  text-align: left;
-  background: transparent;
-  cursor: pointer;
-}
-
-.onboarding-city-option:hover,
-.onboarding-city-option[aria-selected='true'] {
-  color: var(--text);
-  background: var(--surface-raised);
-}
-
-.onboarding-city-option > span {
-  display: grid;
-  gap: 2px;
-}
-
-.onboarding-city-option strong {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.onboarding-city-option small {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.onboarding-city-check {
-  color: var(--accent);
-}
-
-.onboarding-no-city {
-  margin: 0;
-  padding: var(--space-4);
-  color: var(--muted);
-  font-size: 14px;
-}
-
 .onboarding-privacy-note {
   margin: 0;
   color: var(--muted);

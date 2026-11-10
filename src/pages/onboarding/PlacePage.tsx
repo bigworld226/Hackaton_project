@@ -1,39 +1,24 @@
-import { Check, MapPin } from 'lucide-react'
-import { useMemo, useState, type ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, Input } from '@/components'
 import communityStory from '@/assets/community-story.jpg'
-import { countries } from '@/data/countries'
+import { countries, otherCountries, westAfricanCountries } from '@/data/countries'
 
 export function PlacePage() {
   const navigate = useNavigate()
-  const [countryCode, setCountryCode] = useState('PT')
-  const [cityQuery, setCityQuery] = useState('Lis')
-  const [selectedCityId, setSelectedCityId] = useState('lisbon')
+  const [countryCode, setCountryCode] = useState('')
+  const [locality, setLocality] = useState('')
   const selectedCountry = countries.find((country) => country.code === countryCode)
-  const selectedCity = selectedCountry?.cities.find((city) => city.id === selectedCityId)
-  const matchingCities = useMemo(() => {
-    const query = cityQuery.trim().toLocaleLowerCase()
-    if (!selectedCountry) return []
-
-    return selectedCountry.cities
-      .filter((city) => city.name.toLocaleLowerCase().includes(query))
-      .slice(0, 4)
-  }, [cityQuery, selectedCountry])
 
   function handleCountryChange(event: ChangeEvent<HTMLSelectElement>) {
-    const nextCode = event.currentTarget.value
-    const nextCountry = countries.find((country) => country.code === nextCode)
-    const firstCity = nextCountry?.cities[0]
-    setCountryCode(nextCode)
-    setSelectedCityId(firstCity?.id ?? '')
-    setCityQuery(firstCity?.name ?? '')
+    setCountryCode(event.currentTarget.value)
   }
 
   function continueToSignup() {
-    if (!selectedCountry || !selectedCity) return
+    const city = locality.trim()
+    if (!selectedCountry || !city) return
     navigate('/signup', {
-      state: { city: selectedCity.name, country: selectedCountry.name },
+      state: { city, country: selectedCountry.name },
     })
   }
 
@@ -63,8 +48,8 @@ export function PlacePage() {
               <span className="onboarding-step-label">TA SCÈNE LOCALE</span>
               <h2 id="place-title">Le code a aussi son quartier.</h2>
               <p>
-                Choisis une ville pour découvrir les développeurs, événements et
-                discussions près de toi.
+                Choisis ton pays et indique ta ville ou ta localité pour découvrir
+                les développeurs, événements et discussions près de toi.
               </p>
             </div>
 
@@ -76,68 +61,44 @@ export function PlacePage() {
                   id="onboarding-country"
                   onChange={handleCountryChange}
                   value={countryCode}
+                  required
                 >
-                  {countries.map((country) => (
-                    <option key={country.code} value={country.code}>{country.name}</option>
-                  ))}
+                  <option disabled value="">Sélectionne ton pays</option>
+                  <optgroup label="Afrique de l’Ouest">
+                    {westAfricanCountries.map((country) => (
+                      <option key={country.code} value={country.code}>{country.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Autres pays et territoires">
+                    {otherCountries.map((country) => (
+                      <option key={country.code} value={country.code}>{country.name}</option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
 
               <Input
                 autoComplete="address-level2"
-                label="Ville"
-                onChange={(event) => {
-                  setCityQuery(event.currentTarget.value)
-                  setSelectedCityId('')
-                }}
-                placeholder="Cherche ta ville"
-                type="search"
-                value={cityQuery}
+                label="Ville ou localité"
+                maxLength={100}
+                onChange={(event) => setLocality(event.currentTarget.value)}
+                placeholder="Saisis le nom de ta ville ou localité"
+                required
+                type="text"
+                value={locality}
               />
 
-              <div
-                aria-label="Villes disponibles"
-                className="onboarding-city-list"
-                role="listbox"
-              >
-                {matchingCities.length > 0 ? matchingCities.map((city) => {
-                  const selected = city.id === selectedCityId
-                  return (
-                    <button
-                      aria-selected={selected}
-                      className="onboarding-city-option"
-                      key={city.id}
-                      onClick={() => {
-                        setSelectedCityId(city.id)
-                        setCityQuery(city.name)
-                      }}
-                      role="option"
-                      type="button"
-                    >
-                      <MapPin aria-hidden="true" size={20} />
-                      <span>
-                        <strong>{city.name}</strong>
-                        <small>{city.members.toLocaleString('fr-FR')} développeurs dans la communauté</small>
-                      </span>
-                      {selected && <Check aria-label="Sélectionnée" className="onboarding-city-check" size={20} />}
-                    </button>
-                  )
-                }) : (
-                  <p className="onboarding-no-city">Aucune ville trouvée dans ce pays.</p>
-                )}
-              </div>
-
               <p className="onboarding-privacy-note">
-                Ta ville te connecte à une communauté locale. Ton adresse précise
+                Ta localité te connecte à une communauté proche. Ton adresse précise
                 n’est jamais demandée.
               </p>
               <Button
                 className="onboarding-submit"
-                disabled={!selectedCity}
+                disabled={!selectedCountry || !locality.trim()}
                 onClick={continueToSignup}
                 type="button"
               >
-                Continuer avec {selectedCity?.name ?? 'ma ville'}
+                Continuer
               </Button>
             </div>
 
@@ -158,7 +119,7 @@ export function PlacePage() {
             </article>
             <article className="onboarding-promise-card">
               <h2>Ta localisation reste la tienne.</h2>
-              <p>Nous utilisons seulement la ville que tu choisis.</p>
+              <p>Nous utilisons seulement la localité que tu choisis.</p>
             </article>
           </aside>
         </div>
