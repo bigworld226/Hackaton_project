@@ -1,4 +1,5 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { CircleHelp } from 'lucide-react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 
 export function FeedSwitcher() {
   const { pathname } = useLocation()
@@ -22,6 +23,14 @@ export function FeedSwitcher() {
       >
         Publications
       </NavLink>
+      <Link
+        aria-label="Ouvrir les quiz"
+        className="ui-feed-quiz-action"
+        to="/quiz"
+      >
+        <CircleHelp aria-hidden="true" size={23} strokeWidth={1.8} />
+        <span>Quiz</span>
+      </Link>
     </nav>
   )
 }

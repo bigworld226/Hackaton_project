@@ -10,8 +10,9 @@ import {
   Send,
   Share2,
   UsersRound,
+  X,
 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Button, EmptyState, Input, ProgressBar } from '@/components'
 import communityPortrait from '@/assets/community-portrait.jpg'
@@ -29,11 +30,143 @@ const selectedReel = {
   tags: ['css', 'frontend', 'webdev'],
 }
 
+interface Comment {
+  author: string
+  city: string
+  text: string
+}
+
+const sampleReplies: Comment[] = [
+  { author: 'Aïcha Diallo', city: 'Dakar', text: 'Merci pour le partage ! Je vais tester ça sur mon prochain composant.' },
+  { author: 'Inès Moreau', city: 'Lyon', text: 'Bien vu. Ça m’a déjà évité quelques heures de debug.' },
+]
+
+function CommentsSheet({
+  comments,
+  count,
+  onClose,
+  onSubmit,
+  open,
+}: {
+  comments: Comment[]
+  count: number
+  onClose: () => void
+  onSubmit: (comment: string) => void
+  open: boolean
+}) {
+  const [reply, setReply] = useState('')
+  const inputId = useId()
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    previousFocusRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.getElementById(inputId)?.focus()
+    return () => {
+      document.body.style.overflow = previousOverflow
+      previousFocusRef.current?.focus()
+    }
+  }, [inputId, open])
+
+  function submitComment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const text = reply.trim()
+    if (!text) return
+    onSubmit(text)
+    setReply('')
+  }
+
+  if (!open) return null
+
+  return (
+    <div
+      aria-label="Commentaires"
+      aria-modal="true"
+      className="social-comments-overlay"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose()
+        if (event.key === 'Tab') {
+          const focusable = event.currentTarget.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), input:not([disabled])',
+          )
+          const first = focusable[0]
+          const last = focusable[focusable.length - 1]
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault()
+            last?.focus()
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault()
+            first?.focus()
+          }
+        }
+      }}
+      role="dialog"
+      tabIndex={-1}
+    >
+      <section aria-labelledby="social-comments-title" className="social-comments-sheet">
+        <header className="social-comments-header">
+          <div>
+            <h2 id="social-comments-title">Commentaires</h2>
+            <span>{count} réponses</span>
+          </div>
+          <button aria-label="Fermer les commentaires" className="social-comments-close" onClick={onClose} type="button">
+            <X aria-hidden="true" size={21} />
+          </button>
+        </header>
+        <div className="social-comments-list">
+          {comments.map((comment, index) => (
+            <article className="social-comment" key={`${comment.author}-${index}`}>
+              <img alt="" src={communityPortrait} />
+              <div>
+                <strong>{comment.author}</strong>
+                <span>{comment.city} · à l’instant</span>
+                <p>{comment.text}</p>
+                <button aria-label={`Aimer le commentaire de ${comment.author}`} type="button">
+                  <Heart aria-hidden="true" size={15} /> J’aime
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+        <form className="social-comments-form" onSubmit={submitComment}>
+          <img alt="" src={communityPortrait} />
+          <Input
+            aria-label="Écrire un commentaire"
+            autoComplete="off"
+            id={inputId}
+            label="Écrire un commentaire"
+            onChange={(event) => setReply(event.currentTarget.value)}
+            placeholder="Ajoute un commentaire…"
+            value={reply}
+          />
+          <Button aria-label="Publier le commentaire" disabled={!reply.trim()} type="submit">
+            <Send aria-hidden="true" size={18} />
+          </Button>
+        </form>
+      </section>
+    </div>
+  )
+}
+
 export function ReelsPage() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [liked, setLiked] = useState(false)
   const [saved, setSaved] = useState(false)
   const [message, setMessage] = useState('')
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  const [comments, setComments] = useState<Comment[]>(sampleReplies)
+
+  function addComment(text: string) {
+    setComments((current) => [...current, { author: 'Toi', city: 'Ta communauté', text }])
+  }
 
   async function shareReel() {
     try {
@@ -76,14 +209,18 @@ export function ReelsPage() {
                 <Heart aria-hidden="true" fill={liked ? 'currentColor' : 'none'} size={27} />
                 <span>{liked ? '1,3k' : '1,2k'}</span>
               </button>
-              <Link
+              <button
                 aria-label="Voir les réponses"
+                aria-expanded={commentsOpen}
                 className="social-reel-action"
-                to={`/tweets/${reelDiscussion?.id ?? 'reel-css-grid'}`}
+                onClick={() => setCommentsOpen(true)}
+                type="button"
               >
                 <MessageCircle aria-hidden="true" size={25} />
-                <span>{reelDiscussion?.replies ?? 0}</span>
-              </Link>
+                <span>
+                  {(reelDiscussion?.replies ?? comments.length) + comments.length - sampleReplies.length}
+                </span>
+              </button>
               <button
                 aria-label={saved ? 'Retirer des favoris' : 'Enregistrer le Reel'}
                 aria-pressed={saved}
@@ -129,6 +266,13 @@ export function ReelsPage() {
           <p aria-live="polite" className="social-status">{message}</p>
         </aside>
       </div>
+      <CommentsSheet
+        comments={comments}
+        count={(reelDiscussion?.replies ?? comments.length) + comments.length - sampleReplies.length}
+        onClose={() => setCommentsOpen(false)}
+        onSubmit={addComment}
+        open={commentsOpen}
+      />
     </ResponsiveLayout>
   )
 }
@@ -137,6 +281,8 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
   const [liked, setLiked] = useState(false)
   const [reposted, setReposted] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
+  const [commentsOpen, setCommentsOpen] = useState(false)
+  const [comments, setComments] = useState<Comment[]>(sampleReplies)
   const postUrl = `/tweets/${post.id}`
 
   async function sharePost() {
@@ -172,10 +318,15 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
           <Heart aria-hidden="true" fill={liked ? 'currentColor' : 'none'} size={20} />
           <span>{post.likes + Number(liked)}</span>
         </button>
-        <Link aria-label={`${post.replies} réponses`} to={postUrl}>
+        <button
+          aria-label={`${post.replies} réponses`}
+          aria-expanded={commentsOpen}
+          onClick={() => setCommentsOpen(true)}
+          type="button"
+        >
           <MessageCircle aria-hidden="true" size={20} />
           <span>{post.replies}</span>
-        </Link>
+        </button>
         <button
           aria-label={reposted ? 'Annuler le repartage' : 'Repartager'}
           aria-pressed={reposted}
@@ -192,6 +343,13 @@ function PostCard({ post, compact = false }: { post: Post; compact?: boolean }) 
         </button>
       </div>
       {shareMessage && <p aria-live="polite" className="social-share-status">{shareMessage}</p>}
+      <CommentsSheet
+        comments={comments}
+        count={post.replies + comments.length - sampleReplies.length}
+        onClose={() => setCommentsOpen(false)}
+        onSubmit={(text) => setComments((current) => [...current, { author: 'Toi', city: 'Ta communauté', text }])}
+        open={commentsOpen}
+      />
     </article>
   )
 }
@@ -237,11 +395,6 @@ export function TweetsPage() {
     </ResponsiveLayout>
   )
 }
-
-const sampleReplies = [
-  { author: 'Aïcha Diallo', city: 'Dakar', text: 'Merci pour le partage ! Je vais tester ça sur mon prochain composant.' },
-  { author: 'Inès Moreau', city: 'Lyon', text: 'Bien vu. Ça m’a déjà évité quelques heures de debug.' },
-]
 
 export function TweetRepliesPage() {
   const { id } = useParams()

@@ -312,6 +312,7 @@
 }
 
 .ui-feed-switcher {
+  position: relative;
   display: flex;
   justify-content: center;
   gap: var(--space-8);
@@ -344,6 +345,10 @@
   border-radius: 3px 3px 0 0;
   background: var(--accent);
   content: '';
+}
+
+.ui-feed-quiz-action {
+  display: none;
 }
 
 .ui-create-action {
@@ -415,26 +420,6 @@
 
 .ui-top-bar-action {
   justify-self: end;
-}
-
-.ui-quiz-action {
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.ui-quiz-action:hover {
-  color: var(--accent-hover);
-  background: var(--surface-raised);
-}
-
-.ui-quiz-action:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
 }
 
 .ui-modal {
@@ -657,10 +642,86 @@
   .ui-layout--mobile {
     display: none;
   }
+
+  .ui-feed-quiz-action {
+    display: none;
+  }
 }
 
 @media (max-width: 767px) {
   .ui-layout--web {
     display: none;
+  }
+
+  .ui-feed-quiz-action {
+    position: absolute;
+    top: 50%;
+    right: var(--space-4);
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 5px;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transform: translateY(-50%);
+  }
+
+  .ui-feed-quiz-action:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  .ui-layout--reels {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .ui-layout--reels > .ui-page-content {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ui-layout--reels > .ui-feed-switcher {
+    position: fixed;
+    z-index: 20;
+    top: env(safe-area-inset-top);
+    right: 0;
+    left: 0;
+    justify-content: center;
+    border: 0;
+    padding-right: 72px;
+    background: transparent;
+  }
+
+  .ui-layout--reels .ui-feed-tab {
+    min-height: 56px;
+    color: rgb(255 255 255 / 78%);
+    text-shadow: 0 1px 5px rgb(0 0 0 / 60%);
+  }
+
+  .ui-layout--reels .ui-feed-tab--active {
+    color: #fff;
+  }
+
+  .ui-layout--reels .ui-feed-tab--active::after {
+    background: #fff;
+  }
+
+  .ui-layout--reels .ui-feed-quiz-action {
+    right: max(16px, env(safe-area-inset-right));
+    color: #fff;
+    text-shadow: 0 1px 5px rgb(0 0 0 / 60%);
+  }
+
+  .ui-layout--reels .ui-feed-quiz-action:focus-visible {
+    outline-color: #fff;
   }
 }
