@@ -2,6 +2,7 @@
 @import "./styles/theme.css";
 @import "./styles/components.css";
 @import "./pages/onboarding/onboarding.css";
+@import "./pages/social/social.css";
 
 :root {
   font-family: var(--font-sans);

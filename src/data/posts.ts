@@ -32,7 +32,7 @@ export const posts: Post[] = [
     author: { name: 'Malik Ndiaye', handle: '@malikbuilds', role: 'Full-stack dev' },
     city: 'Paris',
     createdAt: 'il y a 42 min',
-    caption: 'Petit tip Git : `git restore --staged fichier` retire un fichier du prochain commit sans perdre tes modifications.',
+    caption: 'Astuce Git : `git restore --staged fichier` retire un fichier du prochain commit sans perdre tes modifications.',
     tags: ['git', 'productivity'],
     likes: 146,
     replies: 19,

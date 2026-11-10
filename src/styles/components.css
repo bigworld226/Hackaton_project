@@ -592,6 +592,23 @@
   text-decoration: none;
 }
 
+.ui-sidebar-create {
+  display: flex;
+  min-height: 50px;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-card);
+  padding: 0 var(--space-4);
+  color: var(--on-accent);
+  background: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ui-sidebar-create:hover {
+  background: var(--accent-hover);
+}
+
 .ui-web-main {
   min-width: 0;
 }

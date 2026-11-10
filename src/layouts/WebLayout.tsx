@@ -3,6 +3,7 @@ import {
   CircleHelp,
   House,
   MessageCircle,
+  Plus,
   Settings,
   UserRound,
 } from 'lucide-react'
@@ -12,7 +13,7 @@ import { FeedSwitcher, TopBar } from '@/components'
 
 const navigationItems = [
   { end: true, href: '/home/reels', icon: House, label: 'Reels' },
-  { end: true, href: '/home/tweets', icon: MessageCircle, label: 'Tips' },
+  { end: true, href: '/home/tweets', icon: MessageCircle, label: 'Publications' },
   { href: '/forums', icon: MessageCircle, label: 'Forums' },
   { href: '/quiz', icon: CircleHelp, label: 'Quiz' },
   { href: '/notifications', icon: Bell, label: 'Notifications' },
@@ -48,6 +49,10 @@ export function WebLayout({ children, title = 'Votre communauté' }: WebLayoutPr
             </NavLink>
           ))}
         </nav>
+        <NavLink className="ui-sidebar-create" to="/create">
+          <Plus aria-hidden="true" size={20} strokeWidth={1.8} />
+          <span>Créer</span>
+        </NavLink>
       </aside>
       <div className="ui-web-main">
         <TopBar title={title} />

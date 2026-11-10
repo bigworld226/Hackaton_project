@@ -20,7 +20,7 @@ export function FeedSwitcher() {
         }
         to="/home/tweets"
       >
-        Tips
+        Publications
       </NavLink>
     </nav>
   )
