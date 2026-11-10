@@ -1,6 +1,5 @@
 import {
   Bell,
-  CircleHelp,
   House,
   MessageCircle,
   Plus,
@@ -11,7 +10,6 @@ import { NavLink } from 'react-router-dom'
 const navigationItems = [
   { href: '/home/reels', icon: House, label: 'Reels' },
   { href: '/forums', icon: MessageCircle, label: 'Forums' },
-  { href: '/quiz', icon: CircleHelp, label: 'Quiz' },
   { href: '/notifications', icon: Bell, label: 'Alertes' },
   { href: '/profile', icon: UserRound, label: 'Profil' },
 ]
@@ -33,7 +31,7 @@ export function BottomNav() {
         </NavLink>
       ))}
       <NavLink
-        aria-label="Créer"
+        aria-label="Ouvrir les fonctions de création"
         className="ui-create-action"
         to="/create"
       >
