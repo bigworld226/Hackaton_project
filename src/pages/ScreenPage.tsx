@@ -17,6 +17,15 @@ import {
   NewThreadPage,
   ThreadDetailPage,
 } from './community/CommunityPages'
+import {
+  MyQuizzesPage,
+  QuizDetailsPage,
+  QuizEditorPage,
+  QuizHubPage,
+  QuizPlayPage,
+  QuizPreviewPage,
+  QuizResultsPage,
+} from './quiz/QuizPages'
 
 interface ScreenPageProps {
   screen: AppScreen
@@ -36,6 +45,13 @@ export function ScreenPage({ screen }: ScreenPageProps) {
   if (screen.path === '/countries') return <CountriesPage />
   if (screen.path === '/threads/:id') return <ThreadDetailPage />
   if (screen.path === '/threads/new') return <NewThreadPage />
+  if (screen.path === '/quiz') return <QuizHubPage />
+  if (screen.path === '/quiz/mine') return <MyQuizzesPage />
+  if (screen.path === '/quiz/:id') return <QuizDetailsPage />
+  if (screen.path === '/quiz/editor') return <QuizEditorPage />
+  if (screen.path === '/quiz/preview') return <QuizPreviewPage />
+  if (screen.path === '/quiz/play') return <QuizPlayPage />
+  if (screen.path === '/quiz/results') return <QuizResultsPage />
 
   return <ResponsiveLayout title={screen.title}>{null}</ResponsiveLayout>
 }
