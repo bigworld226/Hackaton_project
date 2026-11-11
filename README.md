@@ -14,3 +14,4 @@ Les interactions de démonstration (profil, préférences, notifications, conver
 L’apparence et la langue (français/anglais) se règlent depuis **Réglages**.
 
 Les textes de l’interface sont traduits ; les contenus de démonstration (publications, discussions et messages) restent dans leur langue d’origine, comme du contenu partagé par les membres. Les écrans des derniers lots suivent le brief produit, les maquettes Figma n’ayant pas pu être consultées avec le quota MCP disponible.
+"# Hackaton_project" 
