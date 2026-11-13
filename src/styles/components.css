@@ -122,8 +122,8 @@
 }
 
 .ui-badge--success {
-  background: var(--accent-soft);
-  color: var(--accent-hover);
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 .ui-badge--warning {
@@ -673,55 +673,4 @@
     outline-offset: 3px;
   }
 
-  .ui-layout--reels {
-    height: 100vh;
-    height: 100dvh;
-    min-height: 0;
-    overflow: hidden;
-    padding: 0 0 76px;
-  }
-
-  .ui-layout--reels > .ui-page-content {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .ui-layout--reels > .ui-feed-switcher {
-    position: fixed;
-    z-index: 20;
-    top: env(safe-area-inset-top);
-    right: 0;
-    left: 0;
-    justify-content: center;
-    border: 0;
-    padding-right: 72px;
-    background: transparent;
-  }
-
-  .ui-layout--reels .ui-feed-tab {
-    min-height: 56px;
-    color: rgb(255 255 255 / 78%);
-    text-shadow: 0 1px 5px rgb(0 0 0 / 60%);
-  }
-
-  .ui-layout--reels .ui-feed-tab--active {
-    color: #fff;
-  }
-
-  .ui-layout--reels .ui-feed-tab--active::after {
-    background: #fff;
-  }
-
-  .ui-layout--reels .ui-feed-quiz-action {
-    right: max(16px, env(safe-area-inset-right));
-    color: #fff;
-    text-shadow: 0 1px 5px rgb(0 0 0 / 60%);
-  }
-
-  .ui-layout--reels .ui-feed-quiz-action:focus-visible {
-    outline-color: #fff;
-  }
 }

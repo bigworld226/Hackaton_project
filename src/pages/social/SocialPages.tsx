@@ -1,35 +1,102 @@
 import {
   ArrowUpRight,
-  Bookmark,
+  Clock3,
   Code2,
   Heart,
   MessageCircle,
-  Pause,
-  Play,
+  Plus,
   Repeat2,
   Send,
   Share2,
   UsersRound,
   X,
 } from 'lucide-react'
-import { useEffect, useId, useRef, useState, type FormEvent, type MouseEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
-import { Button, EmptyState, Input, ProgressBar } from '@/components'
+import { Badge, Button, Card, EmptyState, Input, Modal, ProgressBar } from '@/components'
 import communityPortrait from '@/assets/community-portrait.jpg'
-import communityStory from '@/assets/community-story.jpg'
 import { posts, type Post } from '@/data/posts'
 import { ResponsiveLayout } from '@/layouts'
 
-const textPosts = posts.filter((post) => post.kind === 'tip')
-const reelDiscussion = posts.find((post) => post.kind === 'reel')
-const selectedReel = {
-  author: 'Maya Santos',
-  role: 'Développeuse front-end',
-  city: 'Lisbonne',
-  caption: 'Une grille CSS qui s’adapte à tous les écrans. En moins de 40 secondes.',
-  tags: ['css', 'frontend', 'webdev'],
+const textPosts = posts
+
+type RoomCategory = 'SOS Debug' | 'Mini-Hackathon' | 'Code Review' | 'Coworking'
+
+interface CodingRoom {
+  id: string
+  title: string
+  titleKey?: string
+  category: RoomCategory
+  tags: string[]
+  participants: Array<{ initials: string; name: string }>
+  sharedCodeSnippet: string
 }
+
+const roomCategoryKeys: Record<RoomCategory, string> = {
+  'SOS Debug': 'social.sosDebug',
+  'Mini-Hackathon': 'social.miniHackathon',
+  'Code Review': 'social.codeReview',
+  Coworking: 'social.coworking',
+}
+
+const demoCodingRooms: CodingRoom[] = [
+  {
+    id: 'fastapi-async-debug',
+    title: 'SOS Debug: Python & FastAPI Async Issue',
+    titleKey: 'social.roomTitleDebugFastapi',
+    category: 'SOS Debug',
+    tags: ['python', 'fastapi', 'asyncio'],
+    participants: [
+      { initials: 'AM', name: 'Aminata' },
+      { initials: 'JD', name: 'Jules' },
+      { initials: 'SK', name: 'Samira' },
+    ],
+    sharedCodeSnippet: `async def get_items():
+    return await client.fetch(...)`,
+  },
+  {
+    id: 'climate-api-hackathon',
+    title: 'Build a climate data API',
+    titleKey: 'social.roomTitleClimateApi',
+    category: 'Mini-Hackathon',
+    tags: ['node', 'typescript', 'open-data'],
+    participants: [
+      { initials: 'ML', name: 'Malo' },
+      { initials: 'FN', name: 'Fatou' },
+      { initials: 'IK', name: 'Idriss' },
+    ],
+    sharedCodeSnippet: `app.get("/readings", async (req, res) => {
+  // your turn
+})`,
+  },
+  {
+    id: 'react-hook-review',
+    title: 'Can you review my React hook?',
+    titleKey: 'social.roomTitleReactReview',
+    category: 'Code Review',
+    tags: ['react', 'typescript', 'hooks'],
+    participants: [
+      { initials: 'AM', name: 'Aminata' },
+      { initials: 'LC', name: 'Lina' },
+    ],
+    sharedCodeSnippet: `function useSearch(query: string) {
+  return useMemo(() => filter(query), [query])
+}`,
+  },
+  {
+    id: 'quiet-coworking',
+    title: 'Ship the landing page together',
+    titleKey: 'social.roomTitleCoworking',
+    category: 'Coworking',
+    tags: ['css', 'react', 'coworking'],
+    participants: [
+      { initials: 'JD', name: 'Jules' },
+      { initials: 'SK', name: 'Samira' },
+    ],
+    sharedCodeSnippet: 'const nextTask = "polish the responsive layout";',
+  },
+]
 
 interface Comment {
   author: string
@@ -158,173 +225,159 @@ function CommentsSheet({
   )
 }
 
-export function ReelsPage() {
+export function CodingRoomsPage() {
   const { t } = useTranslation()
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [liked, setLiked] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [showLikeFeedback, setShowLikeFeedback] = useState(false)
-  const [message, setMessage] = useState('')
-  const [commentsOpen, setCommentsOpen] = useState(false)
-  const [comments, setComments] = useState<Comment[]>(sampleReplies)
-  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [rooms, setRooms] = useState(demoCodingRooms)
+  const [joinedRoomIds, setJoinedRoomIds] = useState<string[]>([])
+  const [hostModalOpen, setHostModalOpen] = useState(false)
+  const [roomTitle, setRoomTitle] = useState('')
+  const [roomCategory, setRoomCategory] = useState<RoomCategory>('SOS Debug')
+  const [roomTags, setRoomTags] = useState('')
+  const [sharedCodeSnippet, setSharedCodeSnippet] = useState('')
+  const [status, setStatus] = useState('')
 
-  useEffect(() => () => {
-    if (clickTimer.current) clearTimeout(clickTimer.current)
-  }, [])
+  const focusSessions = rooms.filter((room) => room.category === 'Coworking').length
 
-  function addComment(text: string) {
-    setComments((current) => [...current, { author: t('social.you'), city: t('social.yourCommunity'), text }])
+  function joinRoom(room: CodingRoom) {
+    setJoinedRoomIds((current) => current.includes(room.id) ? current : [...current, room.id])
+    const title = room.titleKey ? t(room.titleKey) : room.title
+    setStatus(t('social.joinedRoomNotice', { title }))
   }
 
-  async function shareReel() {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setMessage(t('social.copiedReel'))
-    } catch (error) {
-      console.error('Unable to copy the Reel link.', error)
-      setMessage(t('social.shareUnavailable'))
+  function hostRoom() {
+    const cleanTitle = roomTitle.trim()
+    if (!cleanTitle) return
+
+    const room: CodingRoom = {
+      id: `room-${Date.now().toString(36)}`,
+      title: cleanTitle,
+      category: roomCategory,
+      tags: roomTags.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean),
+      participants: [{ initials: 'ME', name: t('social.you') }],
+      sharedCodeSnippet: sharedCodeSnippet.trim() || t('social.codePreviewEmpty'),
     }
-  }
 
-  function handleMediaClick(event: MouseEvent<HTMLElement>) {
-    if (event.detail > 1) return
-    if (clickTimer.current) clearTimeout(clickTimer.current)
-    clickTimer.current = setTimeout(() => {
-      setIsPlaying((current) => !current)
-      clickTimer.current = null
-    }, 240)
-  }
-
-  function handleMediaDoubleClick() {
-    if (clickTimer.current) clearTimeout(clickTimer.current)
-    clickTimer.current = null
-    setLiked(true)
-    setShowLikeFeedback(true)
-    window.setTimeout(() => setShowLikeFeedback(false), 850)
-  }
-
-  function togglePlayback() {
-    if (clickTimer.current) clearTimeout(clickTimer.current)
-    clickTimer.current = null
-    setIsPlaying((current) => !current)
+    setRooms((current) => [room, ...current])
+    setRoomTitle('')
+    setRoomCategory('SOS Debug')
+    setRoomTags('')
+    setSharedCodeSnippet('')
+    setStatus(t('social.roomCreatedNotice', { title: cleanTitle }))
   }
 
   return (
-    <ResponsiveLayout title="Reels">
-      <div className="social-reel-page">
-        <div className="social-reel-stage">
-          <article aria-label={t('social.reel', { author: selectedReel.author })} className="social-reel-card">
-            <div
-              aria-label={t('social.videoControls')}
-              className="social-reel-media"
-              onClick={handleMediaClick}
-              onDoubleClick={handleMediaDoubleClick}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  togglePlayback()
-                }
-              }}
-            >
-              <img
-                alt={t('social.tramAlt')}
-                className="social-reel-image"
-                draggable={false}
-                src={communityStory}
-              />
-              <div className="social-reel-shade" />
+    <ResponsiveLayout title={t('social.codingRoomsTitle')}>
+      <div className="social-rooms-layout">
+        <section className="social-rooms-main">
+          <header className="social-rooms-intro">
+            <p>{t('social.codingRoomsSubtitle')}</p>
+          </header>
+          <section aria-labelledby="coding-rooms-live-title" className="social-rooms-section">
+            <div className="social-rooms-section-heading">
+              <h2 id="coding-rooms-live-title">{t('social.liveNow')}</h2>
+              <Badge>{rooms.length} {t('social.liveRooms')}</Badge>
             </div>
-            {showLikeFeedback && (
-              <Heart aria-hidden="true" className="social-reel-like-feedback" fill="currentColor" size={88} />
-            )}
-            <button
-              aria-label={isPlaying ? t('social.pauseReel') : t('social.playReel')}
-              aria-pressed={isPlaying}
-              className="social-reel-play"
-              onClick={handleMediaClick}
-              onDoubleClick={handleMediaDoubleClick}
-              type="button"
-            >
-              {isPlaying ? <Pause aria-hidden="true" size={28} /> : <Play aria-hidden="true" size={28} />}
-            </button>
-            <div aria-label={t('social.reelActions')} className="social-reel-actions">
-              <button
-                aria-label={liked ? t('social.removeLike') : t('social.likeReel')}
-                aria-pressed={liked}
-                className={`social-reel-action${liked ? ' is-active' : ''}`}
-                onClick={() => setLiked((current) => !current)}
-                type="button"
-              >
-                <Heart aria-hidden="true" fill={liked ? 'currentColor' : 'none'} size={27} />
-                <span>{liked ? '1,3k' : '1,2k'}</span>
-              </button>
-              <button
-                aria-label={t('social.viewReplies')}
-                aria-expanded={commentsOpen}
-                className="social-reel-action"
-                onClick={() => setCommentsOpen(true)}
-                type="button"
-              >
-                <MessageCircle aria-hidden="true" size={25} />
-                <span>
-                  {(reelDiscussion?.replies ?? comments.length) + comments.length - sampleReplies.length}
-                </span>
-              </button>
-              <button
-                aria-label={saved ? t('social.removeSaved') : t('social.saveReel')}
-                aria-pressed={saved}
-                className={`social-reel-action${saved ? ' is-active' : ''}`}
-                onClick={() => setSaved((current) => !current)}
-                type="button"
-              >
-                <Bookmark aria-hidden="true" fill={saved ? 'currentColor' : 'none'} size={23} />
-                <span>{saved ? t('social.saved') : t('social.keep')}</span>
-              </button>
-              <button aria-label={t('social.shareReel')} className="social-reel-action" onClick={shareReel} type="button">
-                <Share2 aria-hidden="true" size={23} />
-                <span>{t('social.share')}</span>
-              </button>
+            <div className="social-room-grid">
+              {rooms.map((room) => {
+                const joined = joinedRoomIds.includes(room.id)
+                const title = room.titleKey ? t(room.titleKey) : room.title
+                return (
+                  <Card
+                    action={<Badge variant="success">{t('social.liveBadge')}</Badge>}
+                    className="social-room-card"
+                    key={room.id}
+                    title={title}
+                  >
+                    <p className="social-room-category">{t(roomCategoryKeys[room.category])}</p>
+                    <div aria-label={t('social.roomTags')} className="social-room-tags">
+                      {room.tags.map((tag) => <span key={tag}>#{tag}</span>)}
+                    </div>
+                    <div aria-label={t('social.connectedParticipants', { count: room.participants.length })} className="social-room-participants">
+                      <div className="social-room-avatars">
+                        {room.participants.slice(0, 4).map((participant) => (
+                          <span aria-label={participant.name} className="social-room-avatar" key={`${room.id}-${participant.initials}`} title={participant.name}>
+                            {participant.initials}
+                          </span>
+                        ))}
+                      </div>
+                      <span>{t('social.connectedParticipants', { count: room.participants.length })}</span>
+                    </div>
+                    <pre aria-label={t('social.sharedCodePreview')} className="social-room-code"><code>{room.sharedCodeSnippet}</code></pre>
+                    <Button
+                      className="social-room-join"
+                      disabled={joined}
+                      onClick={() => joinRoom(room)}
+                      type="button"
+                    >
+                      {joined ? t('social.joinedRoom') : t('social.joinRoom')}
+                    </Button>
+                  </Card>
+                )
+              })}
             </div>
-            <div className="social-reel-copy">
-              <div className="social-reel-author">
-                <img alt="" src={communityPortrait} />
-                <span>
-                  <strong>{selectedReel.author}</strong>
-                  <small>{selectedReel.city} · {selectedReel.role}</small>
-                </span>
-              </div>
-              <p>{selectedReel.caption}</p>
-              <p className="social-reel-tags">
-                {selectedReel.tags.map((tag) => `#${tag}`).join(' ')}
-              </p>
-              <div aria-label={isPlaying ? t('social.demoPlaying') : t('social.reelPaused')} className="social-reel-progress">
-                <span className={isPlaying ? 'is-playing' : ''} />
-              </div>
-            </div>
-          </article>
-        </div>
-        <aside aria-label={`${t('social.discover')} Common`} className="social-reel-aside">
-          <div className="social-aside-card">
-            <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> {t('social.discover')}</span>
-            <h2>{t('social.ideas')}</h2>
-            <p>{t('social.reelDescription')}</p>
-            <Link className="social-inline-link" to="/forums">
-              {t('social.exploreCommunity')} <ArrowUpRight aria-hidden="true" size={16} />
-            </Link>
-          </div>
-          <p aria-live="polite" className="social-status">{message}</p>
+          </section>
+          <p aria-live="polite" className="social-rooms-status">{status}</p>
+        </section>
+        <aside aria-label={t('social.focusSprints')} className="social-rooms-sidebar">
+          <section className="social-aside-card social-prompt-card social-focus-card">
+            <span className="social-eyebrow"><Clock3 aria-hidden="true" size={16} /> {t('social.focusSprints')}</span>
+            <p className="social-focus-count"><strong>{focusSessions}</strong><span>{t('social.focusSessionsInProgress', { count: focusSessions })}</span></p>
+            <p>{t('social.focusSprintsDescription')}</p>
+            <Button onClick={() => setHostModalOpen(true)} type="button">
+              <Plus aria-hidden="true" size={18} /> {t('social.hostRoom')}
+            </Button>
+          </section>
         </aside>
       </div>
-      <CommentsSheet
-        comments={comments}
-        count={(reelDiscussion?.replies ?? comments.length) + comments.length - sampleReplies.length}
-        onClose={() => setCommentsOpen(false)}
-        onSubmit={addComment}
-        open={commentsOpen}
-      />
+      <Modal
+        confirmDisabled={!roomTitle.trim()}
+        confirmLabel={t('social.createRoom')}
+        onClose={() => setHostModalOpen(false)}
+        onConfirm={hostRoom}
+        open={hostModalOpen}
+        title={t('social.hostRoomTitle')}
+      >
+        <div className="social-room-form">
+          <Input
+            autoFocus
+            label={t('social.roomTitle')}
+            maxLength={90}
+            onChange={(event) => setRoomTitle(event.currentTarget.value)}
+            placeholder={t('social.roomTitlePlaceholder')}
+            value={roomTitle}
+          />
+          <div className="ui-field">
+            <label className="ui-label" htmlFor="coding-room-category">{t('social.roomCategory')}</label>
+            <select
+              className="ui-input"
+              id="coding-room-category"
+              onChange={(event) => setRoomCategory(event.currentTarget.value as RoomCategory)}
+              value={roomCategory}
+            >
+              {(Object.keys(roomCategoryKeys) as RoomCategory[]).map((category) => (
+                <option key={category} value={category}>{t(roomCategoryKeys[category])}</option>
+              ))}
+            </select>
+          </div>
+          <Input
+            label={t('social.roomTags')}
+            onChange={(event) => setRoomTags(event.currentTarget.value)}
+            placeholder={t('social.roomTagsPlaceholder')}
+            value={roomTags}
+          />
+          <div className="ui-field">
+            <label className="ui-label" htmlFor="coding-room-code">{t('social.sharedCodePreview')}</label>
+            <textarea
+              className="ui-input social-room-code-input"
+              id="coding-room-code"
+              onChange={(event) => setSharedCodeSnippet(event.currentTarget.value)}
+              placeholder={t('social.codePreviewPlaceholder')}
+              rows={4}
+              value={sharedCodeSnippet}
+            />
+          </div>
+        </div>
+      </Modal>
     </ResponsiveLayout>
   )
 }
@@ -527,7 +580,7 @@ export function CreatePage() {
         <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> {t('social.createSpace')}</span>
         <h2>{t('social.createTitle')}</h2>
         <p>{t('social.createDescription')}</p>
-        <Link className="social-inline-link" to="/home/reels">
+        <Link className="social-inline-link" to="/coding-rooms">
           {t('social.backToFeed')} <ArrowUpRight aria-hidden="true" size={16} />
         </Link>
       </section>

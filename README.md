@@ -1,6 +1,6 @@
 # Projet Hackaton
 
-Prototype responsive de communauté pour développeurs : Reels, publications, forums, quiz et profils. Construit avec React, Vite, TypeScript et Tailwind CSS.
+Prototype responsive de communauté pour développeurs : Coding Rooms, publications, forums, quiz et profils. Construit avec React, Vite, TypeScript et Tailwind CSS.
 
 Les interactions de démonstration (profil, préférences, notifications, conversations et quiz créés) sont stockées dans le navigateur. Aucun compte réel ni service backend n’est connecté.
 

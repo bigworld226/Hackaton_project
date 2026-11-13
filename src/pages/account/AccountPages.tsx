@@ -6,7 +6,7 @@ import {
   Check,
   ChevronRight,
   CircleHelp,
-  Clapperboard,
+  Code2,
   Heart,
   HeartHandshake,
   MapPin,
@@ -41,7 +41,7 @@ const badgeIcons = {
   sparkles: Sparkles,
   'heart-handshake': HeartHandshake,
   trophy: Trophy,
-  clapperboard: Clapperboard,
+  code: Code2,
   'map-pin': MapPin,
 } as const
 
@@ -130,7 +130,7 @@ export function ProfilePage() {
             <div className="account-stats">
               <span><strong>{profile.followers.toLocaleString('fr-FR')}</strong> {t('account.followers')}</span>
               <span><strong>{profile.following.toLocaleString('fr-FR')}</strong> {t('account.following')}</span>
-              <span><strong>{profile.reels}</strong> {t('account.reels')}</span>
+              <span><strong>{profile.roomsHosted}</strong> {t('social.roomsHosted')}</span>
               <span><strong>{profile.posts}</strong> {t('account.posts')}</span>
             </div>
             {saved && <p className="account-success" role="status"><Check aria-hidden="true" size={16} /> {t('account.profileSaved')}</p>}
@@ -172,7 +172,7 @@ export function ProfilePage() {
           </div>
           <aside className="account-section account-activity">
             <h2>{t('account.recent')}</h2>
-            <Link to="/home/reels"><Clapperboard aria-hidden="true" size={18} /> {t('account.reels')} <ChevronRight aria-hidden="true" size={17} /></Link>
+            <Link to="/coding-rooms"><Code2 aria-hidden="true" size={18} /> {t('social.codingRoomsTitle')} <ChevronRight aria-hidden="true" size={17} /></Link>
             <Link to="/home/tweets"><MessageCircle aria-hidden="true" size={18} /> {t('account.posts')} <ChevronRight aria-hidden="true" size={17} /></Link>
             <Link to="/leaderboard"><Trophy aria-hidden="true" size={18} /> {t('account.leaderboardLink')} <ChevronRight aria-hidden="true" size={17} /></Link>
             <Link to="/messages"><MessageCircle aria-hidden="true" size={18} /> {t('account.messagesLink')} <ChevronRight aria-hidden="true" size={17} /></Link>

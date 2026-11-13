@@ -15,7 +15,7 @@ export const lockedFeatures: LockedFeature[] = [
   {
     id: 'advanced-analytics',
     name: 'Statistiques avancées',
-    description: 'Suis les vues et interactions de tes Reels et publications.',
+    description: 'Suis les sessions et interactions de tes Coding Rooms et publications.',
     unlockRequirement: 'Publie 10 contenus.',
   },
   {

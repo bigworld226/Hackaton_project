@@ -13,6 +13,10 @@
   --on-accent: #ffffff;
   --danger: #ad3039;
   --on-danger: #ffffff;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --code-surface: #252a2d;
+  --code-text: #e5e7eb;
   --focus: #0369a1;
 
   --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
@@ -47,6 +51,10 @@
   --on-accent: #1e1e1e;
   --danger: #f14c4c;
   --on-danger: #1e1e1e;
+  --success: #4ade80;
+  --success-soft: #14532d;
+  --code-surface: #17191b;
+  --code-text: #e5e7eb;
   --focus: #3794ff;
 }
 

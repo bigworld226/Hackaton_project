@@ -5,7 +5,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 export function FeedSwitcher() {
   const { pathname } = useLocation()
   const { t } = useTranslation()
-  if (pathname !== '/home/reels' && pathname !== '/home/tweets') return null
+  if (pathname !== '/coding-rooms' && pathname !== '/home/tweets') return null
 
   return (
     <nav aria-label={t('nav.feed')} className="ui-feed-switcher">
@@ -13,9 +13,9 @@ export function FeedSwitcher() {
         className={({ isActive }) =>
           `ui-feed-tab${isActive ? ' ui-feed-tab--active' : ''}`
         }
-        to="/home/reels"
+        to="/coding-rooms"
       >
-        {t('nav.reels')}
+        {t('nav.codingRooms')}
       </NavLink>
       <NavLink
         className={({ isActive }) =>

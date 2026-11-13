@@ -46,10 +46,10 @@ export function WelcomePage() {
 
             <div className="onboarding-welcome-copy">
               <p>
-                {t('onboarding.communityText')}
+                {t('social.codingRoomsSubtitle')}
               </p>
               <div className="onboarding-benefits">
-                <span><Sparkles aria-hidden="true" size={17} /> {t('onboarding.shortFormats')}</span>
+                <span><Sparkles aria-hidden="true" size={17} /> {t('social.roomFormatsBenefit')}</span>
                 <span><MapPin aria-hidden="true" size={17} /> {t('onboarding.localCommunity')}</span>
               </div>
             </div>
@@ -58,7 +58,7 @@ export function WelcomePage() {
               <Link className="ui-button ui-button--primary onboarding-button" to="/place">
                 {t('onboarding.join')} <ArrowRight aria-hidden="true" size={18} />
               </Link>
-              <Link className="ui-button ui-button--secondary onboarding-button" to="/home/reels">
+              <Link className="ui-button ui-button--secondary onboarding-button" to="/coding-rooms">
                 {t('onboarding.exploreFirst')}
               </Link>
             </div>

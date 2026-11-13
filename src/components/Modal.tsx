@@ -5,12 +5,23 @@ import { Button } from './Button'
 
 interface ModalProps {
   children: ReactNode
+  confirmDisabled?: boolean
+  confirmLabel?: string
   onClose: () => void
+  onConfirm?: () => void
   open: boolean
   title: string
 }
 
-export function Modal({ children, onClose, open, title }: ModalProps) {
+export function Modal({
+  children,
+  confirmDisabled = false,
+  confirmLabel,
+  onClose,
+  onConfirm,
+  open,
+  title,
+}: ModalProps) {
   const { t } = useTranslation()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
@@ -59,7 +70,15 @@ export function Modal({ children, onClose, open, title }: ModalProps) {
         <Button onClick={onClose} variant="secondary">
           {t('common.cancel')}
         </Button>
-        <Button onClick={onClose}>{t('common.continue')}</Button>
+        <Button
+          disabled={confirmDisabled}
+          onClick={() => {
+            onConfirm?.()
+            onClose()
+          }}
+        >
+          {confirmLabel ?? t('common.continue')}
+        </Button>
       </div>
     </dialog>
   )

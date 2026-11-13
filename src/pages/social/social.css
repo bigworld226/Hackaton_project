@@ -1,146 +1,127 @@
-.social-reel-page {
+.social-rooms-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+  align-items: start;
   gap: var(--space-8);
 }
 
-.ui-layout--reels .social-reel-page {
-  height: 100%;
-}
-
-.ui-layout--reels .social-reel-stage {
-  height: 100%;
-}
-
-.social-reel-stage {
-  display: flex;
+.social-rooms-main {
+  display: grid;
   min-width: 0;
-  justify-content: center;
+  gap: var(--space-6);
 }
 
-.social-reel-card {
-  position: relative;
-  width: min(100%, 410px);
-  aspect-ratio: 9 / 16;
-  overflow: hidden;
-  border-radius: 24px;
-  color: #fff;
-  background: #10271d;
-  isolation: isolate;
-}
-
-.social-reel-media {
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.social-reel-media:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: -5px;
-}
-
-.social-reel-image,
-.social-reel-shade {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.social-reel-image {
-  object-fit: cover;
-  object-position: center;
-}
-
-.social-reel-shade {
-  background: linear-gradient(180deg, rgb(0 0 0 / 12%) 0%, transparent 36%, rgb(0 0 0 / 77%) 100%);
-  pointer-events: none;
-}
-
-.social-reel-play {
-  position: absolute;
-  top: 43%;
-  left: 50%;
+.social-rooms-intro,
+.social-rooms-section {
   display: grid;
-  width: 68px;
-  height: 68px;
+  gap: var(--space-3);
+}
+
+.social-rooms-intro h1,
+.social-rooms-section-heading h2 {
+  margin: 0;
+  color: var(--text);
+}
+
+.social-rooms-intro h1 {
+  font-size: var(--text-title);
+}
+
+.social-rooms-intro p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-body);
+  line-height: var(--line-height-body);
+}
+
+.social-rooms-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.social-rooms-section-heading h2 {
+  font-size: 18px;
+}
+
+.social-room-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.social-room-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.social-room-card .ui-card-heading {
+  align-items: flex-start;
+}
+
+.social-room-card .ui-card-title {
+  min-width: 0;
+  font-size: 16px;
+}
+
+.social-room-card .ui-card-heading > .ui-badge {
+  flex: 0 0 auto;
+}
+
+.social-room-category {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-label);
+  font-weight: 600;
+}
+
+.social-room-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.social-room-tags span {
+  color: var(--accent-hover);
+  font-size: var(--text-label);
+}
+
+.social-room-participants {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-label);
+}
+
+.social-room-avatars {
+  display: flex;
+  padding-left: 2px;
+}
+
+.social-room-avatar {
+  display: grid;
+  width: 30px;
+  aspect-ratio: 1;
   place-items: center;
-  border: 0;
+  margin-left: -2px;
+  border: 2px solid var(--surface);
   border-radius: 50%;
-  color: #fff;
-  background: rgb(16 39 29 / 92%);
-  cursor: pointer;
-  transform: translate(-50%, -50%);
-  z-index: 1;
+  color: var(--code-text);
+  background: var(--code-surface);
+  font-size: 10px;
+  font-weight: 700;
 }
 
-.social-reel-play:hover {
-  background: var(--accent-hover);
-}
-
-.social-reel-actions {
-  position: absolute;
-  z-index: 2;
-  right: 12px;
-  bottom: 21%;
-  display: grid;
-  gap: 16px;
-}
-
-.social-reel-action {
-  display: grid;
-  min-width: 44px;
-  justify-items: center;
-  gap: 5px;
-  border: 0;
-  padding: 2px;
-  color: #fff;
-  background: transparent;
-  font: inherit;
-  font-size: 11px;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.social-reel-action:hover,
-.social-reel-action.is-active {
-  color: #a9d8ff;
-}
-
-.social-reel-copy {
-  position: absolute;
-  z-index: 2;
-  right: 72px;
-  bottom: 16px;
-  left: 20px;
-  display: grid;
-  gap: 12px;
-}
-
-.social-reel-like-feedback {
-  position: absolute;
-  z-index: 3;
-  top: 50%;
-  left: 50%;
-  color: #fff;
-  filter: drop-shadow(0 3px 12px rgb(0 0 0 / 40%));
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  animation: social-reel-heart-pop 850ms ease-out both;
-}
-
-.social-reel-author,
 .social-post-author {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.social-reel-author img,
 .social-post-author img {
   width: 38px;
   height: 38px;
@@ -149,54 +130,74 @@
   object-fit: cover;
 }
 
-.social-reel-author > span,
 .social-post-author > div {
   display: grid;
   gap: 2px;
 }
 
-.social-reel-author strong {
-  font-size: 14px;
-}
-
-.social-reel-author small {
-  color: rgb(255 255 255 / 82%);
-  font-size: 11px;
-}
-
-.social-reel-copy > p {
+.social-room-code {
+  min-height: 76px;
   margin: 0;
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.social-reel-copy .social-reel-tags {
-  color: rgb(255 255 255 / 82%);
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  color: var(--text);
+  background: var(--surface-raised);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-.social-reel-progress {
-  height: 3px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: rgb(255 255 255 / 35%);
+.social-room-join {
+  width: 100%;
 }
 
-.social-reel-progress span {
-  display: block;
-  width: 32%;
-  height: 100%;
-  background: #fff;
-}
-
-.social-reel-progress span.is-playing {
-  width: 54%;
-  transition: width 6s linear;
-}
-
-.social-reel-aside {
+.social-rooms-sidebar {
   display: grid;
   gap: var(--space-4);
+}
+
+.social-focus-card {
+  gap: var(--space-4);
+}
+
+.social-focus-count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.social-focus-count strong {
+  color: var(--accent-hover);
+  font-size: 36px;
+  line-height: 1;
+}
+
+.social-focus-count span {
+  color: var(--text);
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.social-rooms-status {
+  min-height: 20px;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-label);
+}
+
+.social-room-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.social-room-code-input {
+  min-height: 100px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 .social-aside-card,
@@ -568,17 +569,22 @@
   to { transform: translateY(0); }
 }
 
-@keyframes social-reel-heart-pop {
-  0% { opacity: 0; scale: 0.35; }
-  22% { opacity: 1; scale: 1.15; }
-  38% { scale: 1; }
-  100% { opacity: 0; scale: 1.1; }
-}
-
 @media (min-width: 768px) {
   .social-feed-layout {
     grid-template-columns: minmax(0, 640px) minmax(250px, 364px);
     justify-content: space-between;
+  }
+
+  .social-room-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .social-rooms-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .social-rooms-sidebar {
+    grid-row: 1;
   }
 
   .social-reply-form {
@@ -587,37 +593,23 @@
   }
 }
 
+@media (min-width: 1200px) {
+  .social-rooms-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+  }
+
+  .social-rooms-sidebar {
+    grid-row: auto;
+  }
+}
+
 @media (max-width: 767px) {
-  .social-reel-page {
+  .social-rooms-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .social-reel-aside {
-    display: none;
-  }
-
-  .social-reel-card {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    aspect-ratio: auto;
-    border-radius: 0;
-  }
-
-  .social-reel-copy {
-    bottom: 14px;
-    left: 14px;
-    gap: 9px;
-  }
-
-  .social-reel-actions {
-    right: max(8px, env(safe-area-inset-right));
-    bottom: calc(18% + env(safe-area-inset-bottom));
-    gap: 14px;
-  }
-
-  .social-reel-copy {
-    bottom: max(14px, env(safe-area-inset-bottom));
+  .social-rooms-sidebar {
+    grid-row: 1;
   }
 
   .social-feed-layout {
@@ -681,8 +673,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .social-comments-overlay,
-  .social-comments-sheet,
-  .social-reel-like-feedback {
+  .social-comments-sheet {
     animation: none;
   }
 }

@@ -35,7 +35,7 @@ export function SignupPage() {
           <p>{onboardingLocation.city
             ? t('onboarding.demoReady', { city: onboardingLocation.city })
             : t('onboarding.demoReadyGeneral')}</p>
-          <Button onClick={() => navigate('/home/reels')}>{t('onboarding.seeVideos')}</Button>
+          <Button onClick={() => navigate('/coding-rooms')}>{t('social.openCodingRooms')}</Button>
         </section>
       </main>
     )
@@ -116,7 +116,7 @@ export function SignupPage() {
                 {t('onboarding.createAccount')}
               </Button>
               <p className="onboarding-login-note">
-                {t('onboarding.alreadyMember')} <Link to="/home/reels">{t('onboarding.exploreCommon')}</Link>
+                {t('onboarding.alreadyMember')} <Link to="/coding-rooms">{t('onboarding.exploreCommon')}</Link>
               </p>
               <p className="onboarding-demo-note">
                 {t('onboarding.demo')}

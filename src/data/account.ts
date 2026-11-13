@@ -48,7 +48,7 @@ const initialConversations: Conversation[] = [
     city: 'Lisbonne',
     lastActive: 'En ligne',
     messages: [
-      { id: 'm1', author: 'Maya Santos', text: 'Salut ! J’ai vu ton Reel sur les grilles CSS, très clair 👏', createdAt: '10:24' },
+      { id: 'm1', author: 'Maya Santos', text: 'Salut ! J’ai vu ta session Coding Rooms sur les grilles CSS, très claire 👏', createdAt: '10:24' },
       { id: 'm2', author: 'Toi', text: 'Merci ! Je prépare une suite avec quelques mises en page réelles.', createdAt: '10:27' },
       { id: 'm3', author: 'Maya Santos', text: 'Génial, je serais ravie de tester ça. Tu utilises quoi pour enregistrer ton écran ?', createdAt: '10:31' },
     ],
@@ -148,7 +148,7 @@ export function getProfileSummary() {
     bio: savedProfile?.bio ?? 'Développeur·se frontend | React, CSS & open source. Je partage ce que j’apprends en construisant.',
     followers: 1284,
     following: 362,
-    reels: 18,
+    roomsHosted: 18,
     posts: 34,
     points: 860,
     badges: badges.map((badge) => ({ ...badge })),

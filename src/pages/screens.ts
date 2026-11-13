@@ -9,7 +9,7 @@ export const appScreens: AppScreen[] = [
   { path: '/welcome', title: 'Bienvenue', section: 'Compte' },
   { path: '/place', title: 'Ta ville', section: 'Compte' },
   { path: '/signup', title: 'Créer un compte', section: 'Compte' },
-  { path: '/home/reels', title: 'Reels', navLabel: 'Reels', section: 'Accueil' },
+  { path: '/coding-rooms', title: 'Salles de code', navLabel: 'Salles de code', section: 'Accueil' },
   { path: '/home/tweets', title: 'Publications', navLabel: 'Publications', section: 'Accueil' },
   { path: '/tweets/:id', title: 'Réponses à la publication', section: 'Accueil' },
   { path: '/create', title: 'Créer une publication', navLabel: 'Créer', section: 'Accueil' },
@@ -34,4 +34,6 @@ export const appScreens: AppScreen[] = [
   { path: '/settings', title: 'Réglages', navLabel: 'Réglages', section: 'Profil' },
   { path: '/settings/privacy', title: 'Confidentialité', section: 'Profil' },
   { path: '/settings/city', title: 'Changer de ville', section: 'Profil' },
+  { path: '/map', title: 'Carte', section: 'Communauté' },
+
 ]

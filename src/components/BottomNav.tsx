@@ -1,6 +1,6 @@
 import {
   Bell,
-  House,
+  Code2,
   MessageCircle,
   Plus,
   UserRound,
@@ -11,7 +11,7 @@ import { NavLink } from 'react-router-dom'
 export function BottomNav() {
   const { t } = useTranslation()
   const navigationItems = [
-    { href: '/home/reels', icon: House, label: t('nav.reels') },
+    { href: '/coding-rooms', icon: Code2, label: t('nav.codingRooms') },
     { href: '/forums', icon: MessageCircle, label: t('nav.forums') },
     { href: '/notifications', icon: Bell, label: t('nav.notifications') },
     { href: '/profile', icon: UserRound, label: t('nav.profile') },

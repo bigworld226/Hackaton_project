@@ -1,7 +1,7 @@
 import {
   Bell,
   CircleHelp,
-  House,
+  Code2,
   MessageCircle,
   Plus,
   Settings,
@@ -20,7 +20,7 @@ interface WebLayoutProps {
 export function WebLayout({ children, title = 'Votre communauté' }: WebLayoutProps) {
   const { t } = useTranslation()
   const navigationItems = [
-    { end: true, href: '/home/reels', icon: House, label: t('nav.reels') },
+    { end: true, href: '/coding-rooms', icon: Code2, label: t('nav.codingRooms') },
     { end: true, href: '/home/tweets', icon: MessageCircle, label: t('nav.posts') },
     { href: '/forums', icon: MessageCircle, label: t('nav.forums') },
     { href: '/quiz', icon: CircleHelp, label: t('nav.quiz') },
@@ -33,7 +33,7 @@ export function WebLayout({ children, title = 'Votre communauté' }: WebLayoutPr
   return (
     <div className="ui-layout ui-layout--web">
       <aside className="ui-sidebar">
-        <NavLink className="ui-sidebar-brand" to="/home/reels">
+        <NavLink className="ui-sidebar-brand" to="/coding-rooms">
           common
         </NavLink>
         <nav aria-label={t('nav.main')} className="ui-sidebar-nav">
