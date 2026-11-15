@@ -19,8 +19,6 @@ import communityPortrait from '@/assets/community-portrait.jpg'
 import { posts, type Post } from '@/data/posts'
 import { ResponsiveLayout } from '@/layouts'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/AuthProvider'
-const textPosts = posts
 
 type RoomCategory = 'SOS Debug' | 'Mini-Hackathon' | 'Code Review' | 'Coworking'
 
@@ -642,8 +640,6 @@ export function CreatePage() {
 
     setIsSubmitting(true)
     setErrorMsg('')
-
-    // 1. Récupère l'utilisateur directement depuis Supabase en direct
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
@@ -652,13 +648,11 @@ export function CreatePage() {
       return
     }
 
-    // 2. Formate les tags
     const parsedTags = tagsInput
       .split(/[\s,]+/)
       .map((tag) => tag.replace(/^#/, '').trim())
       .filter(Boolean)
 
-    // 3. Insère dans ta table social_posts
     const { error } = await supabase.from('social_posts').insert({
       author_id: user.id,
       body: body.trim(),
@@ -673,16 +667,12 @@ export function CreatePage() {
       return
     }
 
-    // 4. AUTOMATISATION DU BADGE "first-post"
-    // Vérifie combien de posts l'utilisateur possède au total
     const { count: postsCount } = await supabase
       .from('social_posts')
       .select('*', { count: 'exact', head: true })
       .eq('author_id', user.id)
 
-    // Si c'est le tout premier post (count === 1)
     if (postsCount === 1) {
-      // Vérifie par sécurité qu'il ne possède pas déjà le badge
       const { data: existingBadge } = await supabase
         .from('user_badges')
         .select('*')
@@ -691,12 +681,10 @@ export function CreatePage() {
         .maybeSingle()
 
       if (!existingBadge) {
-        // Attribue automatiquement le badge dans la table user_badges
+        localStorage.setItem('trigger_badge_toast', 'Premier Post 🚀');
         await supabase
           .from('user_badges')
           .insert([{ profile_id: user.id, badge_id: 'first-post' }])
-        
-        // (Optionnel) Tu pourrais déclencher un state ou un événement ici si tu veux afficher ton pop-up de célébration avant la redirection !
       }
     }
 

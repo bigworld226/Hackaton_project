@@ -31,7 +31,6 @@ import {
   getProfileSummary,
   markAllNotificationsRead,
   markNotificationRead,
-  saveProfileDetails,
   sendDirectMessage,
 } from '@/data/account'
 import { countries, getCountryName } from '@/data/countries'
@@ -142,7 +141,7 @@ export function ProfilePage() {
   points: 0,
   badges: [],
 })
-  const [loading, setLoading] = useState(true)
+  const [, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState('')
   const [handle, setHandle] = useState('')

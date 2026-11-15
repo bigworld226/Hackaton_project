@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { MobileLayout } from './MobileLayout'
 import { WebLayout } from './WebLayout'
-import { useState, useEffect } from 'react'
+import { useState,  } from 'react'
 import  DevBadgeToast   from '../pages/bot/bot' 
 interface ResponsiveLayoutProps {
   children: ReactNode
