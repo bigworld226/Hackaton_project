@@ -19,9 +19,10 @@ import {
   Trophy,
   UsersRound,
 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 import { Badge, Button, EmptyState, Input, Tabs } from '@/components'
 import {
   getConversation,
@@ -34,8 +35,10 @@ import {
   sendDirectMessage,
 } from '@/data/account'
 import { countries, getCountryName } from '@/data/countries'
+import { getPublicProfile, type PublicProfile } from '@/services/map'
 import { useTheme, type ThemeMode } from '@/hooks/useTheme'
 import { ResponsiveLayout } from '@/layouts'
+import { useAuth } from '@/hooks/AuthProvider'
 
 const badgeIcons = {
   sparkles: Sparkles,
@@ -52,6 +55,70 @@ const notificationIcons = {
   quiz: Trophy,
 } as const
 
+export function PublicDeveloperProfilePage() {
+  const { developerId = '' } = useParams()
+  const { t } = useTranslation()
+  const [developer, setDeveloper] = useState<PublicProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    void getPublicProfile(developerId)
+      .then((profile) => {
+        if (active) setDeveloper(profile)
+      })
+      .catch((error: unknown) => {
+        console.error('Unable to load public developer profile.', error)
+        if (active) setLoadError(true)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => { active = false }
+  }, [developerId])
+
+  if (loading) {
+    return <ResponsiveLayout title={t('map.profileTitle')}><p>{t('common.loading')}</p></ResponsiveLayout>
+  }
+
+  if (loadError || !developer) {
+    return (
+      <ResponsiveLayout title={t('map.profileTitle')}>
+        <EmptyState
+          action={<Link className="community-text-link" to="/map">{t('map.backToMap')}</Link>}
+          description={t('map.profileNotFoundDescription')}
+          title={t('map.profileNotFound')}
+        />
+      </ResponsiveLayout>
+    )
+  }
+
+  return (
+    <ResponsiveLayout title={developer.display_name}>
+      <div className="account-page">
+        <Link className="account-back-link" to="/map">{t('map.backToMap')}</Link>
+        <section className="account-profile-card">
+          <div className="account-profile-cover" />
+          <div className="account-profile-main">
+            <div aria-hidden="true" className="account-avatar">{developer.display_name.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toLocaleUpperCase()}</div>
+            <h2>{developer.display_name}</h2>
+            <span className="account-handle">{developer.handle}</span>
+            <p className="account-profile-bio">{developer.bio}</p>
+            {developer.city && <span className="account-location"><MapPin aria-hidden="true" size={16} /> {developer.city}</span>}
+            <Badge><Trophy aria-hidden="true" size={14} /> {developer.points} {t('account.points')}</Badge>
+            <section aria-label={t('map.languages')} className="nearby-profile-languages">
+              <h3>{t('map.languages')}</h3>
+              <div>{developer.languages.map((language) => <Badge key={language}>{language}</Badge>)}</div>
+            </section>
+          </div>
+        </section>
+      </div>
+    </ResponsiveLayout>
+  )
+}
+
 function AccountIntro({ title, description }: { title: string; description: string }) {
   return (
     <header className="account-intro">
@@ -63,27 +130,144 @@ function AccountIntro({ title, description }: { title: string; description: stri
 
 export function ProfilePage() {
   const { i18n, t } = useTranslation()
-  const profile = getProfileSummary()
-  const profileBio = profile.bio.startsWith('Développeur·se frontend | React, CSS & open source.')
-    ? t('account.profileBio')
-    : profile.bio
+  const { user } = useAuth() // Récupère l'utilisateur connecté
+  const [profile, setProfile] = useState<any>({
+  display_name: '',
+  handle: '',
+  bio: '',
+  city: '',
+  followers: 0,
+  following: 0,
+  posts: 0,
+  points: 0,
+  badges: [],
+})
+  const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState(profile.name)
-  const [handle, setHandle] = useState(profile.handle)
-  const [bio, setBio] = useState(profileBio)
+  const [name, setName] = useState('')
+  const [handle, setHandle] = useState('')
+  const [bio, setBio] = useState('')
   const [saved, setSaved] = useState(false)
   const [shareStatus, setShareStatus] = useState('')
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!user) {
+        setLoading(false)
+        return
+      }
 
-  function save(event: FormEvent<HTMLFormElement>) {
+      // 1. Récupérer le profil utilisateur
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profileError) {
+        console.error('Erreur chargement profil :', profileError.message)
+      } else if (profileData) {
+        setProfile(profileData)
+        setName(profileData.display_name || '')
+        setHandle(profileData.handle || '')
+        setBio(profileData.bio || '')
+      }
+
+      // 2. Compter les followers (via la table follows)
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('followed_id', user.id)
+
+      // 3. Compter les following (via la table follows)
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', user.id)
+
+      // 4. Compter les posts de l'utilisateur
+      const { count: postsCount } = await supabase
+        .from('social_posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('author_id', user.id)
+
+      // 5. NOUVEAU : Récupérer les badges depuis user_badges avec les détails de la table badges
+      const { data: userBadgesData, error: badgesError } = await supabase
+        .from('user_badges')
+        .select(`
+          awarded_at,
+          badges (
+            id,
+            name,
+            description,
+            icon
+          )
+        `)
+        .eq('profile_id', user.id)
+
+      if (badgesError) {
+        console.error('Erreur chargement badges :', badgesError.message)
+      }
+
+      // Formater les badges pour l'affichage
+      const formattedBadges = (userBadgesData || []).map((item: any) => ({
+        id: item.badges.id,
+        name: item.badges.name,
+        description: item.badges.description,
+        icon: item.badges.icon,
+        unlocked: true,
+      }))
+
+      // Mettre à jour l'état global du profil avec les vraies données ET les badges
+      setProfile((prev: any) => ({
+        ...prev,
+        ...(profileData || {}),
+        followers: followersCount || 0,
+        following: followingCount || 0,
+        posts: postsCount || 0,
+        badges: formattedBadges, 
+      }))
+
+      setLoading(false)
+    }
+
+    fetchUserProfile()
+  }, [user])
+  async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!user) return
+
     const cleanName = name.trim()
-    const cleanHandle = handle.trim().startsWith('@') ? handle.trim() : `@${handle.trim()}`
+    const cleanHandle = handle.trim().replace(/^@/, '').toLowerCase() // Nettoie le handle selon ton check SQL
+    
     if (!cleanName || cleanHandle.length < 3) return
-    saveProfileDetails({ name: cleanName, handle: cleanHandle, bio: bio.trim() })
-    setName(cleanName)
-    setHandle(cleanHandle)
+
+    // Mise à jour dans Supabase
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        display_name: cleanName,
+        handle: cleanHandle,
+        bio: bio.trim(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('Erreur mise à jour profil :', error.message)
+      return
+    }
+
+    // Met à jour l'état local pour refléter les changements instantanément
+    setProfile((prev: any) => ({
+      ...prev,
+      display_name: cleanName,
+      handle: cleanHandle,
+      bio: bio.trim(),
+    }))
+    
     setSaved(true)
     setEditing(false)
+    setTimeout(() => setSaved(false), 3000) // Cache le message de succès après 3s
   }
 
   async function shareProfile() {
@@ -113,7 +297,13 @@ export function ProfilePage() {
             <span className="account-profile-orbit account-profile-orbit--two" />
           </div>
           <div className="account-profile-main">
-            <div className="account-avatar" aria-hidden="true">A</div>
+            <div className="account-avatar" aria-hidden="true">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                profile?.display_name?.charAt(0).toUpperCase() || 'U'
+              )}
+            </div>
             <div className="account-profile-actions">
               <Link aria-label={t('account.settingsLink')} className="account-profile-icon-link" to="/settings"><Settings aria-hidden="true" size={17} /></Link>
               <Button onClick={() => setEditing((current) => !current)} type="button" variant="secondary">
@@ -123,18 +313,30 @@ export function ProfilePage() {
                 <ArrowRight aria-hidden="true" size={16} /> {t('account.shareProfile')}
               </Button>
             </div>
-            <h2>{profile.name}</h2>
-            <span className="account-handle">{profile.handle}</span>
-            <p className="account-profile-bio">{profile.bio}</p>
-            <span className="account-location"><MapPin aria-hidden="true" size={16} /> {profile.city}, {getCountryName(profile.countryCode, i18n.resolvedLanguage ?? 'fr')}</span>
+            
+            {/* Corrigé : display_name au lieu de name */}
+            <h2>{profile?.display_name || 'Utilisateur'}</h2>
+            <span className="account-handle">@{profile?.handle || 'username'}</span>
+            
+            {/* Corrigé : Suppression du @ en trop */}
+            <p className="account-profile-bio">{profile?.bio || ''}</p>
+            
+            {/* Corrigé : Suppression du @ en trop devant la ville */}
+            <span className="account-location">
+              <MapPin aria-hidden="true" size={16} /> {profile?.city || 'Ouagadougou'}
+              {profile?.country_code ? `, ${getCountryName(profile.country_code, i18n.resolvedLanguage ?? 'fr')}` : ''}
+            </span>
+
             <div className="account-stats">
-              <span><strong>{profile.followers.toLocaleString('fr-FR')}</strong> {t('account.followers')}</span>
-              <span><strong>{profile.following.toLocaleString('fr-FR')}</strong> {t('account.following')}</span>
-              <span><strong>{profile.roomsHosted}</strong> {t('social.roomsHosted')}</span>
-              <span><strong>{profile.posts}</strong> {t('account.posts')}</span>
+              <span><strong>{(profile?.followers || 0).toLocaleString('fr-FR')}</strong>{' '}{t('account.followers')}</span>{' '}
+              <span><strong>{(profile?.following || 0).toLocaleString('fr-FR')}</strong>{' '}{t('account.following')}</span>{' '}
+              <span><strong>{profile?.roomsHosted || 0}</strong>{' '}{t('social.roomsHosted')}</span>{' '}
+              <span><strong>{profile?.posts || 0}</strong>{' '}{t('account.posts')}</span>
             </div>
+
             {saved && <p className="account-success" role="status"><Check aria-hidden="true" size={16} /> {t('account.profileSaved')}</p>}
             {shareStatus && <p className="account-success" role="status">{shareStatus}</p>}
+
             {editing && (
               <form className="account-edit-form" onSubmit={save}>
                 <Input label={t('account.name')} maxLength={60} onChange={(event) => setName(event.currentTarget.value)} required value={name} />
@@ -151,14 +353,15 @@ export function ProfilePage() {
             )}
           </div>
         </section>
+
         <section className="account-content-grid">
           <div className="account-section">
             <div className="account-section-heading">
               <h2>{t('account.badges')}</h2>
-              <Badge><Trophy aria-hidden="true" size={14} /> {profile.points} {t('account.points')}</Badge>
+              <Badge><Trophy aria-hidden="true" size={14} /> {profile?.points || 0} {t('account.points')}</Badge>
             </div>
             <div className="account-badge-grid">
-              {profile.badges.map((badge) => {
+              {(profile?.badges || []).map((badge: any) => {
                 const Icon = badgeIcons[badge.icon as keyof typeof badgeIcons] ?? Sparkles
                 return (
                   <article className={`account-badge-card${badge.unlocked ? '' : ' account-badge-card--locked'}`} key={badge.id}>
@@ -170,6 +373,7 @@ export function ProfilePage() {
               })}
             </div>
           </div>
+          
           <aside className="account-section account-activity">
             <h2>{t('account.recent')}</h2>
             <Link to="/coding-rooms"><Code2 aria-hidden="true" size={18} /> {t('social.codingRoomsTitle')} <ChevronRight aria-hidden="true" size={17} /></Link>
@@ -182,6 +386,7 @@ export function ProfilePage() {
       </div>
     </ResponsiveLayout>
   )
+
 }
 
 export function LeaderboardPage() {

@@ -13,12 +13,13 @@ import {
 } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, EmptyState, Input, Modal, ProgressBar } from '@/components'
 import communityPortrait from '@/assets/community-portrait.jpg'
 import { posts, type Post } from '@/data/posts'
 import { ResponsiveLayout } from '@/layouts'
-
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/AuthProvider'
 const textPosts = posts
 
 type RoomCategory = 'SOS Debug' | 'Mini-Hackathon' | 'Code Review' | 'Coworking'
@@ -492,18 +493,73 @@ function CommunitySidebar() {
 
 export function TweetsPage() {
   const { t } = useTranslation()
+  const [posts, setPosts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadPosts() {
+      // On interroge social_posts et on récupère display_name et city depuis profiles
+      const { data, error } = await supabase
+        .from('social_posts')
+        .select(`
+          *,
+          profiles:author_id (
+            handle,
+            display_name,
+            city,
+            avatar_url
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Erreur chargement posts :', error.message)
+      } else if (data) {
+        const formattedPosts = data.map((item) => ({
+          id: item.id,
+          author: {
+            // Utilise display_name en priorité, sinon le handle, sinon 'Développeur'
+            name: item.profiles?.display_name || item.profiles?.handle || 'Développeur',
+          },
+          // Utilise la vraie ville enregistrée dans profiles
+          city: item.profiles?.city || 'Ouagadougou',
+          createdAt: new Date(item.created_at).toLocaleDateString(),
+          caption: item.body,
+          tags: item.tags || [],
+          likes: item.likes_count || 0,
+          replies: item.replies_count || 0,
+        }))
+        setPosts(formattedPosts)
+      }
+      setLoading(false)
+    }
+
+    loadPosts()
+  }, [])
+
   return (
     <ResponsiveLayout title={t('social.posts')}>
       <div className="social-feed-layout">
         <section aria-label={t('social.communityPosts')} className="social-post-list">
-          {textPosts.map((post) => <PostCard key={post.id} post={post} />)}
+          <div style={{ marginBottom: '1rem', textAlign: 'right' }}>
+            <Link className="social-inline-link" to="/create">
+              + Nouvelle publication
+            </Link>
+          </div>
+
+          {loading ? (
+            <p>{t('common.loading')}</p>
+          ) : posts.length === 0 ? (
+            <p>Aucune publication pour le moment. Sois le premier à en créer une !</p>
+          ) : (
+            posts.map((post) => <PostCard key={post.id} post={post} />)
+          )}
         </section>
         <CommunitySidebar />
       </div>
     </ResponsiveLayout>
   )
 }
-
 export function TweetRepliesPage() {
   const { t } = useTranslation()
   const { id } = useParams()
@@ -574,15 +630,110 @@ export function TweetRepliesPage() {
 
 export function CreatePage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const [body, setBody] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
+
+  async function handlePublish(e: React.FormEvent) {
+    e.preventDefault()
+    if (!body.trim() || isSubmitting) return
+
+    setIsSubmitting(true)
+    setErrorMsg('')
+
+    // 1. Récupère l'utilisateur directement depuis Supabase en direct
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      setErrorMsg("Tu dois être connecté pour publier.")
+      setIsSubmitting(false)
+      return
+    }
+
+    // 2. Formate les tags
+    const parsedTags = tagsInput
+      .split(/[\s,]+/)
+      .map((tag) => tag.replace(/^#/, '').trim())
+      .filter(Boolean)
+
+    // 3. Insère dans ta table social_posts
+    const { error } = await supabase.from('social_posts').insert({
+      author_id: user.id,
+      body: body.trim(),
+      tags: parsedTags,
+      visibility: 'public',
+      status: 'published',
+    })
+
+    if (error) {
+      setErrorMsg(`Erreur SQL : ${error.message}`)
+      setIsSubmitting(false)
+      return
+    }
+
+    // 4. AUTOMATISATION DU BADGE "first-post"
+    // Vérifie combien de posts l'utilisateur possède au total
+    const { count: postsCount } = await supabase
+      .from('social_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('author_id', user.id)
+
+    // Si c'est le tout premier post (count === 1)
+    if (postsCount === 1) {
+      // Vérifie par sécurité qu'il ne possède pas déjà le badge
+      const { data: existingBadge } = await supabase
+        .from('user_badges')
+        .select('*')
+        .eq('profile_id', user.id)
+        .eq('badge_id', 'first-post')
+        .maybeSingle()
+
+      if (!existingBadge) {
+        // Attribue automatiquement le badge dans la table user_badges
+        await supabase
+          .from('user_badges')
+          .insert([{ profile_id: user.id, badge_id: 'first-post' }])
+        
+        // (Optionnel) Tu pourrais déclencher un state ou un événement ici si tu veux afficher ton pop-up de célébration avant la redirection !
+      }
+    }
+
+    setIsSubmitting(false)
+    navigate('/home/tweets')
+  }
+
   return (
     <ResponsiveLayout title={t('social.create')}>
-      <section className="social-create-placeholder">
-        <span className="social-eyebrow"><Code2 aria-hidden="true" size={16} /> {t('social.createSpace')}</span>
-        <h2>{t('social.createTitle')}</h2>
-        <p>{t('social.createDescription')}</p>
-        <Link className="social-inline-link" to="/coding-rooms">
-          {t('social.backToFeed')} <ArrowUpRight aria-hidden="true" size={16} />
-        </Link>
+      <section className="social-create-placeholder" style={{ maxWidth: '600px', margin: '0 auto', padding: '2rem' }}>
+        <h2>Publier un post</h2>
+        <form onSubmit={handlePublish} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+          <textarea
+            rows={5}
+            placeholder="Partage une astuce code, un projet ou une question..."
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            required
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ccc' }}
+          />
+          <input
+            type="text"
+            placeholder="Tags (ex: react, supabase)"
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ccc' }}
+          />
+          {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <button type="submit" disabled={isSubmitting} style={{ padding: '0.75rem 1.5rem', cursor: 'pointer' }}>
+              {isSubmitting ? 'Publication...' : 'Publier'}
+            </button>
+            <Link className="social-inline-link" to="/home/tweets">
+              Annuler
+            </Link>
+          </div>
+        </form>
       </section>
     </ResponsiveLayout>
   )

@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Input } from '@/components'
 import communityPortrait from '@/assets/community-portrait.jpg'
 import { getCountryName } from '@/data/countries'
+import { supabase } from '@/lib/supabase'
 
 interface OnboardingLocation {
   city?: string
@@ -18,10 +19,46 @@ export function SignupPage() {
   const location = useLocation()
   const onboardingLocation = (location.state ?? {}) as OnboardingLocation
   const [isCreated, setIsCreated] = useState(false)
+  const [signupEmail, setSignupEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!event.currentTarget.reportValidity()) return
+    const form = event.currentTarget
+    if (!form.reportValidity() || isSubmitting) return
+
+    const values = new FormData(form)
+    const email = String(values.get('email') ?? '').trim().toLowerCase()
+    const password = String(values.get('password') ?? '')
+    const displayName = String(values.get('displayName') ?? '').trim()
+    setIsSubmitting(true)
+    setFormError('')
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: displayName,
+          city: onboardingLocation.city ?? null,
+          country_code: onboardingLocation.countryCode ?? null,
+        },
+      },
+    })
+
+    setIsSubmitting(false)
+    if (error || !data.user) {
+      setFormError(t('auth.signUpError'))
+      return
+    }
+
+    if (data.session) {
+      navigate('/coding-rooms', { replace: true })
+      return
+    }
+
+    setSignupEmail(email)
     setIsCreated(true)
   }
 
@@ -31,11 +68,9 @@ export function SignupPage() {
         <section aria-live="polite" className="onboarding-success">
           <div className="onboarding-success-icon"><Check aria-hidden="true" size={30} /></div>
           <p className="onboarding-step-label">{t('onboarding.profileReady')}</p>
-          <h1>{t('onboarding.welcomeCommunityTitle')}</h1>
-          <p>{onboardingLocation.city
-            ? t('onboarding.demoReady', { city: onboardingLocation.city })
-            : t('onboarding.demoReadyGeneral')}</p>
-          <Button onClick={() => navigate('/coding-rooms')}>{t('social.openCodingRooms')}</Button>
+          <h1>{t('auth.confirmationTitle')}</h1>
+          <p>{t('auth.confirmationDescription', { email: signupEmail })}</p>
+          <Link className="ui-button ui-button--primary onboarding-button" to="/login">{t('auth.signIn')}</Link>
         </section>
       </main>
     )
@@ -112,14 +147,12 @@ export function SignupPage() {
                   {t('onboarding.terms')}
                 </span>
               </label>
-              <Button className="onboarding-submit" type="submit">
-                {t('onboarding.createAccount')}
+              {formError && <p className="ui-field-message ui-field-message--error" role="alert">{formError}</p>}
+              <Button className="onboarding-submit" disabled={isSubmitting} type="submit">
+                {isSubmitting ? t('common.loading') : t('onboarding.createAccount')}
               </Button>
               <p className="onboarding-login-note">
-                {t('onboarding.alreadyMember')} <Link to="/coding-rooms">{t('onboarding.exploreCommon')}</Link>
-              </p>
-              <p className="onboarding-demo-note">
-                {t('onboarding.demo')}
+                {t('onboarding.alreadyMember')} <Link to="/login">{t('auth.signIn')}</Link>
               </p>
             </form>
 

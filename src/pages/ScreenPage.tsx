@@ -1,14 +1,15 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/hooks/AuthProvider'
 import { ResponsiveLayout } from '@/layouts'
 import { appScreens, type AppScreen } from './screens'
 import { PlacePage } from './onboarding/PlacePage'
 import { SignupPage } from './onboarding/SignupPage'
+import { LoginPage } from './onboarding/LoginPage'
 import { WelcomePage } from './onboarding/WelcomePage'
-import { CodingRoomsPage } from './social/SocialPages'
-import { MapPage } from './map/MapPage'
-
 import {
+  CodingRoomsPage,
   CreatePage,
   TweetRepliesPage,
   TweetsPage,
@@ -37,18 +38,54 @@ import {
   NotificationsPage,
   PrivacyPage,
   ProfilePage,
+  PublicDeveloperProfilePage,
   SettingsPage,
 } from './account/AccountPages'
+
+const MapPage = lazy(() =>
+  import('./map/MapPage').then((module) => ({
+    default: module.MapPage,
+  }))
+)
 
 interface ScreenPageProps {
   screen: AppScreen
 }
 
 export function ScreenPage({ screen }: ScreenPageProps) {
+  const { user, loading } = useAuth()
+  const location = useLocation()
+
+  const publicPaths = ['/welcome', '/place', '/signup', '/login']
+  const isPublic = publicPaths.includes(screen.path)
+
+  if (loading) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        Chargement de la session...
+      </div>
+    )
+  }
+
+  if (!isPublic && !user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />
+  }
+
+  if ((screen.path === '/login' || screen.path === '/signup') && user) {
+    return <Navigate to="/home/tweets" replace />
+  }
+
   if (screen.path === '/welcome') return <WelcomePage />
   if (screen.path === '/place') return <PlacePage />
   if (screen.path === '/signup') return <SignupPage />
-  if (screen.path === '/map') return <MapPage />
+  if (screen.path === '/login') return <LoginPage />
+  if (screen.path === '/map') {
+    return (
+      <Suspense fallback={null}>
+        <MapPage />
+      </Suspense>
+    )
+  }
   if (screen.path === '/coding-rooms') return <CodingRoomsPage />
   if (screen.path === '/home/tweets') return <TweetsPage />
   if (screen.path === '/tweets/:id') return <TweetRepliesPage />
@@ -66,6 +103,7 @@ export function ScreenPage({ screen }: ScreenPageProps) {
   if (screen.path === '/quiz/preview') return <QuizPreviewPage />
   if (screen.path === '/quiz/play') return <QuizPlayPage />
   if (screen.path === '/quiz/results') return <QuizResultsPage />
+  if (screen.path === '/profile/:developerId') return <PublicDeveloperProfilePage />
   if (screen.path === '/profile') return <ProfilePage />
   if (screen.path === '/leaderboard') return <LeaderboardPage />
   if (screen.path === '/notifications') return <NotificationsPage />

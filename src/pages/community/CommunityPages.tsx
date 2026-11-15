@@ -7,15 +7,54 @@ import {
   Plus,
   Search,
   Send,
+  Trophy,
   UsersRound,
 } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Button, Card, EmptyState, Input } from '@/components'
+import { Badge, Button, Card, EmptyState, Input, ProgressBar } from '@/components'
 import { countries, getCountryName, westAfricanCountries } from '@/data/countries'
-import { addThread, getThreadById, getThreads, type Thread } from '@/data/threads'
+import { globalChampion, monthlyLeaderboard, type MonthlyLeaderboardEntry } from '@/data/leaderboard'
+import type { Thread } from '@/data/threads'
+import {
+  createForumReply,
+  createForumThread,
+  getForumReplies,
+  getForumThread,
+  getForumThreads,
+  type ForumReplyRow,
+  type ForumThreadRow,
+} from '@/services/forums'
 import { ResponsiveLayout } from '@/layouts'
+
+function relativeTime(value: string, locale: string) {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60_000))
+  const formatter = new Intl.RelativeTimeFormat(locale.startsWith('en') ? 'en' : 'fr', { numeric: 'auto' })
+  if (minutes < 60) return formatter.format(-minutes, 'minute')
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return formatter.format(-hours, 'hour')
+  return formatter.format(-Math.round(hours / 24), 'day')
+}
+
+function toThread(row: ForumThreadRow, locale: string): Thread {
+  return {
+    id: row.id,
+    title: row.title,
+    body: row.body,
+    author: row.author_name,
+    city: row.city,
+    country: getCountryName(row.country_code, locale),
+    tags: row.tags,
+    replies: Number(row.replies),
+    views: Number(row.views),
+    createdAt: relativeTime(row.created_at, locale),
+  }
+}
+
+function toThreadReply(row: ForumReplyRow): ThreadReply {
+  return { author: row.author_name, text: row.body }
+}
 
 function ThreadCard({ thread }: { thread: Thread }) {
   const { t } = useTranslation()
@@ -66,9 +105,141 @@ function CommunityIntro({
   )
 }
 
-export function ForumsPage() {
+function getInitials(name: string) {
+  return name.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toLocaleUpperCase()
+}
+
+function CityTournament({
+  finalists,
+  voteCounts,
+  votedFor,
+  onVote,
+}: {
+  finalists: MonthlyLeaderboardEntry[]
+  voteCounts: Record<string, number>
+  votedFor: string | null
+  onVote: (handle: string) => void
+}) {
   const { t } = useTranslation()
-  const recentThreads = getThreads()
+  const totalVotes = finalists.reduce((total, finalist) => total + (voteCounts[finalist.handle] ?? finalist.publicVotes), 0)
+  const placeKeys = ['firstPlace', 'secondPlace', 'thirdPlace']
+
+  return (
+    <section aria-labelledby="community-tournament-title" className="community-tournament">
+      <header className="community-tournament-heading">
+        <div>
+          <span className="community-eyebrow"><Trophy aria-hidden="true" size={17} /> {t('community.monthlyTournament')}</span>
+          <h2 id="community-tournament-title">{t('community.tournamentTitle', { city: finalists[0]?.city ?? '' })}</h2>
+        </div>
+        <Badge>{t('community.thisMonth')}</Badge>
+      </header>
+      <div className="community-finalist-grid">
+        {finalists.map((finalist, index) => {
+          const votes = voteCounts[finalist.handle] ?? finalist.publicVotes
+          const voteShare = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0
+          const hasVoted = votedFor !== null
+
+          return (
+            <Card
+              action={<Badge variant={index === 0 ? 'warning' : 'default'}>{t(`community.${placeKeys[index]}`)}</Badge>}
+              className="community-finalist-card"
+              key={finalist.handle}
+              title={finalist.name}
+            >
+              <span className="community-finalist-handle">{finalist.handle}</span>
+              <strong className="community-finalist-points">{t('community.monthlyPoints', { count: finalist.points })}</strong>
+              <ProgressBar label={t('community.techScore')} value={finalist.techScore} />
+              <ProgressBar label={t('community.publicVote')} value={voteShare} />
+              <Button
+                className="community-vote-button"
+                disabled={hasVoted}
+                onClick={() => onVote(finalist.handle)}
+                type="button"
+              >
+                {votedFor === finalist.handle
+                  ? t('community.voteRecorded')
+                  : hasVoted ? t('community.voteAlreadyCast') : t('community.vote')}
+              </Button>
+            </Card>
+          )
+        })}
+      </div>
+      <p aria-live="polite" className="community-vote-status">
+        {votedFor ? t('community.voteThanks') : t('community.votePrompt')}
+      </p>
+    </section>
+  )
+}
+
+function MonthlyLeaderboardSidebar({ entries }: { entries: MonthlyLeaderboardEntry[] }) {
+  const { t } = useTranslation()
+
+  return (
+    <aside aria-label={t('community.monthlyLeaderboard')} className="community-monthly-sidebar">
+      <Card className="community-global-champion">
+        <div className="community-global-champion-heading">
+          <span className="community-global-icon"><Globe2 aria-hidden="true" size={21} /></span>
+          <div>
+            <strong>{t('community.globalChampion')}</strong>
+            <Badge variant="warning">{t('community.championTitle')}</Badge>
+          </div>
+        </div>
+        <div className="community-global-profile">
+          <span aria-hidden="true" className="community-rank-avatar">{getInitials(globalChampion.name)}</span>
+          <div>
+            <strong>{globalChampion.name}</strong>
+            <span>{globalChampion.handle} · {globalChampion.city}</span>
+          </div>
+        </div>
+        <strong className="community-global-points">{t('community.monthlyPoints', { count: globalChampion.points })}</strong>
+      </Card>
+
+      <section aria-labelledby="monthly-leaderboard-title" className="community-monthly-ranking">
+        <header>
+          <span className="community-eyebrow"><Trophy aria-hidden="true" size={16} /> {t('community.monthly')}</span>
+          <h2 id="monthly-leaderboard-title">{t('community.topDevelopers', { city: entries[0]?.city ?? '' })}</h2>
+        </header>
+        <ol>
+          {entries.map((entry) => (
+            <li key={entry.handle}>
+              <span className="community-monthly-rank">{entry.rank}</span>
+              <span aria-hidden="true" className="community-rank-avatar">{getInitials(entry.name)}</span>
+              <span className="community-monthly-user">
+                <strong>{entry.handle}</strong>
+                <small>{entry.name}</small>
+              </span>
+              <strong className="community-monthly-points">{t('community.pointsShort', { count: entry.points })}</strong>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </aside>
+  )
+}
+
+export function ForumsPage() {
+  const { t, i18n } = useTranslation()
+  const [recentThreads, setRecentThreads] = useState<Thread[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    void getForumThreads()
+      .then((rows) => {
+        if (active) setRecentThreads(rows.map((row) => toThread(row, i18n.resolvedLanguage ?? 'fr')))
+      })
+      .catch((error: unknown) => {
+        console.error('Unable to load forum threads.', error)
+        if (active) setLoadError(true)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+
+    return () => { active = false }
+  }, [i18n.resolvedLanguage])
 
   return (
     <ResponsiveLayout title={t('community.forums')}>
@@ -110,9 +281,13 @@ export function ForumsPage() {
             <Plus aria-hidden="true" size={18} /> {t('community.newDiscussion')}
           </Link>
         </div>
-        <section aria-label={t('community.recentConversations')} className="community-thread-list">
-          {recentThreads.map((thread) => <ThreadCard key={thread.id} thread={thread} />)}
-        </section>
+        {loading ? <p>{t('common.loading')}</p> : loadError ? (
+          <EmptyState description={t('community.loadError')} title={t('community.recentConversations')} />
+        ) : (
+          <section aria-label={t('community.recentConversations')} className="community-thread-list">
+            {recentThreads.map((thread) => <ThreadCard key={thread.id} thread={thread} />)}
+          </section>
+        )}
       </div>
     </ResponsiveLayout>
   )
@@ -128,9 +303,42 @@ export function ForumScopePage({ scope }: { scope: 'city' | 'country' }) {
   const locationName = isCity ? 'Dakar' : selectedCountry
     ? getCountryName(selectedCountry.code, i18n.resolvedLanguage ?? 'fr')
     : countryName
-  const recentThreads = getThreads().filter((thread) =>
-    isCity ? thread.city === locationName : thread.country === countryName,
+  const [recentThreads, setRecentThreads] = useState<Thread[]>([])
+  const [loadingThreads, setLoadingThreads] = useState(true)
+  const [threadsError, setThreadsError] = useState(false)
+  const monthlyEntries = monthlyLeaderboard
+    .filter((entry) => entry.city === locationName)
+    .sort((left, right) => left.rank - right.rank)
+    .slice(0, 10)
+  const finalists = monthlyEntries.slice(0, 3)
+  const [voteCounts, setVoteCounts] = useState<Record<string, number>>(() =>
+    Object.fromEntries(finalists.map((finalist) => [finalist.handle, finalist.publicVotes])),
   )
+  const [votedFor, setVotedFor] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    setLoadingThreads(true)
+    void getForumThreads(isCity ? { city: locationName } : { countryCode })
+      .then((rows) => {
+        if (active) setRecentThreads(rows.map((row) => toThread(row, i18n.resolvedLanguage ?? 'fr')))
+      })
+      .catch((error: unknown) => {
+        console.error('Unable to load scoped forum threads.', error)
+        if (active) setThreadsError(true)
+      })
+      .finally(() => {
+        if (active) setLoadingThreads(false)
+      })
+
+    return () => { active = false }
+  }, [countryCode, i18n.resolvedLanguage, isCity, locationName])
+
+  function voteForFinalist(handle: string) {
+    if (votedFor || !finalists.some((finalist) => finalist.handle === handle)) return
+    setVoteCounts((current) => ({ ...current, [handle]: (current[handle] ?? 0) + 1 }))
+    setVotedFor(handle)
+  }
 
   return (
     <ResponsiveLayout title={isCity ? t('community.cityTitle') : t('community.countryTitle')}>
@@ -142,26 +350,41 @@ export function ForumScopePage({ scope }: { scope: 'city' | 'country' }) {
           eyebrow={isCity ? t('community.localCommunity') : t('community.nationalCommunity')}
           title={locationName}
         />
-        <div className="community-scope-actions">
-          <Link className="community-text-link" to="/forums">
-            {t('community.allForums')} <ArrowRight aria-hidden="true" size={17} />
-          </Link>
-          <Link className="community-create-link" to="/threads/new">
-            <Plus aria-hidden="true" size={18} /> {t('community.startDiscussion')}
-          </Link>
+        {isCity && (
+          <CityTournament
+            finalists={finalists}
+            onVote={voteForFinalist}
+            voteCounts={voteCounts}
+            votedFor={votedFor}
+          />
+        )}
+        <div className={isCity ? 'community-city-layout' : undefined}>
+          <div className="community-city-feed">
+            <div className="community-scope-actions">
+              <Link className="community-text-link" to="/forums">
+                {t('community.allForums')} <ArrowRight aria-hidden="true" size={17} />
+              </Link>
+              <Link className="community-create-link" to="/threads/new">
+                <Plus aria-hidden="true" size={18} /> {t('community.startDiscussion')}
+              </Link>
+            </div>
+            <h2 className="community-subheading">{t('community.discussionsAt', { location: locationName })}</h2>
+            <section aria-label={t('community.discussionsAt', { location: locationName })} className="community-thread-list">
+              {loadingThreads ? <p>{t('common.loading')}</p> : threadsError ? (
+                <EmptyState description={t('community.loadError')} title={t('community.discussionsAt', { location: locationName })} />
+              ) : recentThreads.length > 0 ? recentThreads.map((thread) => (
+                <ThreadCard key={thread.id} thread={thread} />
+              )) : (
+                <EmptyState
+                  action={<Link className="community-create-link" to="/threads/new">{t('community.firstDiscussion')}</Link>}
+                  description={t('community.beFirst')}
+                  title={t('community.startWithYou')}
+                />
+              )}
+            </section>
+          </div>
+          {isCity && <MonthlyLeaderboardSidebar entries={monthlyEntries} />}
         </div>
-        <h2 className="community-subheading">{t('community.discussionsAt', { location: locationName })}</h2>
-        <section aria-label={t('community.discussionsAt', { location: locationName })} className="community-thread-list">
-          {recentThreads.length > 0 ? recentThreads.map((thread) => (
-            <ThreadCard key={thread.id} thread={thread} />
-          )) : (
-            <EmptyState
-              action={<Link className="community-create-link" to="/threads/new">{t('community.firstDiscussion')}</Link>}
-              description={t('community.beFirst')}
-              title={t('community.startWithYou')}
-            />
-          )}
-        </section>
       </div>
     </ResponsiveLayout>
   )
@@ -250,23 +473,70 @@ interface ThreadReply {
 export function ThreadDetailPage() {
   const { id = '' } = useParams()
   const { t, i18n } = useTranslation()
-  const thread = getThreadById(id)
+  const [thread, setThread] = useState<Thread | null>(null)
+  const [replies, setReplies] = useState<ThreadReply[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [reply, setReply] = useState('')
+  const [replyError, setReplyError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    void Promise.all([getForumThread(id), getForumReplies(id)])
+      .then(([threadRow, replyRows]) => {
+        if (!active) return
+        setThread(threadRow ? toThread(threadRow, i18n.resolvedLanguage ?? 'fr') : null)
+        setReplies(replyRows.map(toThreadReply))
+      })
+      .catch((error: unknown) => {
+        console.error('Unable to load forum discussion.', error)
+        if (active) setLoadError(true)
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => { active = false }
+  }, [i18n.resolvedLanguage, id])
+
   const threadCountry = countries.find((country) => country.name === thread?.country)
   const localizedThreadCountry = threadCountry
     ? getCountryName(threadCountry.code, i18n.resolvedLanguage ?? 'fr')
     : thread?.country
-  const [reply, setReply] = useState('')
-  const [replies, setReplies] = useState<ThreadReply[]>([
-    { author: 'Malik Ndiaye', text: 'Partant ! Je peux aider à préparer le sujet React.' },
-    { author: 'Inès Moreau', text: 'Super idée, je serai là aussi.' },
-  ])
 
-  function submitReply(event: FormEvent<HTMLFormElement>) {
+  async function submitReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const text = reply.trim()
-    if (!text) return
-    setReplies((current) => [...current, { author: t('community.you'), text }])
-    setReply('')
+    if (!text || submitting) return
+    setSubmitting(true)
+    setReplyError('')
+    try {
+      const created = await createForumReply(id, text)
+      setReplies((current) => [...current, toThreadReply(created)])
+      setReply('')
+    } catch (error) {
+      if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
+        setReplyError(t('community.signInToReply'))
+      } else {
+        console.error('Unable to publish forum reply.', error)
+        setReplyError(t('community.submitError'))
+      }
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return <ResponsiveLayout title={t('community.threadDetail')}><p>{t('common.loading')}</p></ResponsiveLayout>
+  }
+
+  if (loadError) {
+    return (
+      <ResponsiveLayout title={t('community.threadDetail')}>
+        <EmptyState description={t('community.loadError')} title={t('community.threadDetail')} />
+      </ResponsiveLayout>
+    )
   }
 
   if (!thread) {
@@ -298,7 +568,7 @@ export function ThreadDetailPage() {
             <p>{thread.body}</p>
             <div className="community-tags">{thread.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>
             <footer>
-              <span><MessageCircle aria-hidden="true" size={18} /> {t('community.replies', { count: thread.replies + Math.max(0, replies.length - 2) })}</span>
+              <span><MessageCircle aria-hidden="true" size={18} /> {t('community.replies', { count: replies.length })}</span>
               <span>{t('community.views', { count: thread.views.toLocaleString() })}</span>
             </footer>
           </article>
@@ -328,7 +598,8 @@ export function ThreadDetailPage() {
               placeholder={t('community.replyPlaceholder')}
               value={reply}
             />
-            <Button disabled={!reply.trim()} type="submit"><Send aria-hidden="true" size={17} /> {t('community.sendReply')}</Button>
+            {replyError && <p className="ui-field-message ui-field-message--error" role="alert">{replyError}</p>}
+            <Button disabled={!reply.trim() || submitting} type="submit"><Send aria-hidden="true" size={17} /> {submitting ? t('common.loading') : t('community.sendReply')}</Button>
           </form>
         </section>
         <aside className="community-detail-aside">
@@ -356,20 +627,34 @@ export function NewThreadPage() {
   const [city, setCity] = useState('')
   const [countryCode, setCountryCode] = useState('SN')
   const [tagsText, setTagsText] = useState('')
+  const [formError, setFormError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const selectedCountry = countries.find((country) => country.code === countryCode)
 
-  function submitThread(event: FormEvent<HTMLFormElement>) {
+  async function submitThread(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!selectedCountry) return
-    const thread = addThread({
-      author: t('community.you'),
-      body: body.trim(),
-      city: city.trim(),
-      country: selectedCountry.name,
-      tags: tagsText.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean).slice(0, 5),
-      title: title.trim(),
-    })
-    navigate(`/threads/${thread.id}`)
+    if (!selectedCountry || submitting) return
+    setSubmitting(true)
+    setFormError('')
+    try {
+      const threadId = await createForumThread({
+        body: body.trim(),
+        city: city.trim(),
+        countryCode: selectedCountry.code,
+        tags: tagsText.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean).slice(0, 5),
+        title: title.trim(),
+      })
+      navigate(`/threads/${threadId}`)
+    } catch (error) {
+      if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
+        setFormError(t('community.signInToPublish'))
+      } else {
+        console.error('Unable to publish forum thread.', error)
+        setFormError(t('community.submitError'))
+      }
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -442,10 +727,11 @@ export function NewThreadPage() {
             placeholder={t('community.tagsPlaceholder')}
             value={tagsText}
           />
+          {formError && <p className="ui-field-message ui-field-message--error" role="alert">{formError}</p>}
           <div className="community-form-actions">
             <Link className="community-text-link" to="/forums">{t('community.cancel')}</Link>
-            <Button disabled={!title.trim() || !body.trim() || !city.trim()} type="submit">
-              {t('community.publishThread')} <ArrowRight aria-hidden="true" size={17} />
+            <Button disabled={!title.trim() || !body.trim() || !city.trim() || submitting} type="submit">
+              {submitting ? t('common.loading') : t('community.publishThread')} <ArrowRight aria-hidden="true" size={17} />
             </Button>
           </div>
         </form>

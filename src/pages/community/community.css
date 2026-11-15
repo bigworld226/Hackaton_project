@@ -113,6 +113,249 @@
   gap: var(--space-3);
 }
 
+.community-tournament {
+  display: grid;
+  gap: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+  background: color-mix(in srgb, var(--accent-soft) 64%, var(--surface));
+}
+
+.community-tournament-heading,
+.community-tournament-heading > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.community-tournament-heading > div {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.community-tournament-heading h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.community-finalist-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.community-finalist-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.community-finalist-card .ui-card-heading {
+  align-items: flex-start;
+}
+
+.community-finalist-card .ui-card-title {
+  font-size: 15px;
+}
+
+.community-finalist-card .ui-card-heading > .ui-badge {
+  flex: 0 0 auto;
+  padding-inline: var(--space-2);
+  font-size: 10px;
+}
+
+.community-finalist-handle {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.community-finalist-points {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.community-vote-button {
+  width: 100%;
+  min-height: 42px;
+  padding-inline: var(--space-3);
+  font-size: 13px;
+}
+
+.community-vote-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-label);
+}
+
+.community-city-layout {
+  display: grid;
+  align-items: start;
+  gap: var(--space-8);
+}
+
+.community-city-feed,
+.community-monthly-sidebar {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--space-4);
+}
+
+.community-global-champion {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0;
+  overflow: hidden;
+}
+
+.community-global-champion-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-raised);
+}
+
+.community-global-icon {
+  display: grid;
+  width: 40px;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+}
+
+.community-global-champion-heading > div {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.community-global-champion-heading .ui-badge {
+  min-height: 22px;
+  padding-inline: var(--space-2);
+  font-size: 10px;
+}
+
+.community-global-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-4);
+}
+
+.community-rank-avatar {
+  display: grid;
+  width: 36px;
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 50%;
+  color: var(--accent-hover);
+  background: var(--accent-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.community-global-profile > div {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.community-global-profile strong,
+.community-global-points {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.community-global-profile span:not(.community-rank-avatar) {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.community-global-points {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.community-monthly-ranking {
+  display: grid;
+  gap: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--border) 27%, transparent);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  background: var(--surface);
+}
+
+.community-monthly-ranking header {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.community-monthly-ranking h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.community-monthly-ranking ol {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.community-monthly-ranking li {
+  display: grid;
+  grid-template-columns: 20px 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 42px;
+}
+
+.community-monthly-rank {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.community-monthly-user {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.community-monthly-user strong,
+.community-monthly-points {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.community-monthly-user small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .community-thread-card {
   display: grid;
   gap: var(--space-3);
@@ -484,6 +727,28 @@
 
   .community-thread-form {
     padding: var(--space-4);
+  }
+
+  .community-finalist-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .community-city-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .community-tournament {
+    padding: var(--space-4);
+  }
+
+  .community-tournament-heading {
+    align-items: flex-start;
+  }
+}
+
+@media (min-width: 1100px) {
+  .community-city-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
   }
 }
 

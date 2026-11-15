@@ -166,6 +166,9 @@
   color: var(--muted);
   font-size: 12px;
 }
+.account-stats span {
+  gap: var(--space-4); 
+}
 
 .account-stats strong {
   color: var(--text);
